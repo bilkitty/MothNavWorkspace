@@ -29,6 +29,17 @@ def count(items):
 # returns a dicitonary:
 # key = conditions, value = trial count
 def count_trials(td):
+   # moth count
+   dd = count(td.moth_id)
+
+   # check for reasonable siz
+   if(len(dd) != 13):
+      print("l(obst) = "+str(len(dd)))
+   else:
+      print("MothIds:")
+      print_sorted(dd)
+
+   # obstacles
    dd = count(td.obstacles)
 
    # check for reasonable siz
