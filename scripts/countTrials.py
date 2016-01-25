@@ -31,53 +31,28 @@ def count(items):
 def count_trials(td):
    # moth count
    dd = count(td.moth_id)
-
-   # check for reasonable siz
-   if(len(dd) != 13):
-      print("l(obst) = "+str(len(dd)))
-   else:
-      print("MothIds:")
-      print_sorted(dd)
+   print("MothIds:")
+   print_sorted(dd)
 
    # obstacles
    dd = count(td.obstacles)
-
-   # check for reasonable siz
-   if(len(dd) != 3):
-      print("l(obst) = "+str(len(dd)))
-   else:
-      print("Obstacles:")
-      print_sorted(dd)
+   print("Obstacles:")
+   print_sorted(dd)
 
    # flight_speed
    dd = count(td.flight_speed)
-
-   # check for reasonable siz
-   if(len(dd) != 4):
-      print("l(fs) = "+str(len(dd)))
-   else:
-      print("Flight Speeds:")
-      print_sorted(dd)
+   print("Flight Speeds:")
+   print_sorted(dd)
 
    # fog_min
    dd = count(td.fog_min)
-
-   # check for reasonable siz
-   if(len(dd) != 8):
-      print("l(fmin) = "+str(len(dd)))
-   else:
-      print("Fog Min:")
-      print_sorted(dd)
+   print("Fog Min:")
+   print_sorted(dd)
 
    # fog_max
    dd = count(td.fog_max)
-
-   # check for reasonable size
-   if(len(dd) != 8):
-      print("l(fmax) = "+str(len(dd)))
-   else:
-      print("Fog Max:")
-      print_sorted(dd)
+   print("Fog Max:")
+   print_sorted(dd)
 
    return
 
