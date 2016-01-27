@@ -4,95 +4,24 @@ import pandas as pd
 import os.path as osp
 import sys
 
-# count trials
-   # count conditions used for all trials
-   # blue
-   # bright
-   # dark
-   # speed 1,2,4,8
-   # fmin (8 of these)
-   # fmax (8 of those)
-def print_sorted(d):
-   sorted_by_val = sorted(d,key=d.get)
-   last = len(sorted_by_val)-1
-
-   print("{",end="")
-   for k in sorted_by_val[:last]:
-      print(' '+k+':'+str(d[k]))
-   k = sorted_by_val[last]
-   print(' '+k+':'+str(d[k])+"}")
-
-   return
-
-def count(items):
-   d = {}
-   for k in items:
-      if(k in d.keys()):
-         d[k] += 1
-      else:
-         d[k] = 1
-   return d
-
-# takes trial data frame
-# returns a dicitonary:
-# key = conditions, value = trial count
-def count_trials(td):
-   dd = count(td.obstacles)
-
-   # check for reasonable siz
-   if(len(dd) != 3):
-      print("l(obst) = "+str(len(dd)))
-   else:
-      print("Obstacles:")
-      print(dd)
-      print_sorted(dd)
-
-
-   # # flight_speed
-   # dd = count(td.flight_speed)
-
-   # # check for reasonable siz
-   # if(len(dd) != 4):
-   #    print("l(fs) = "+str(len(dd)))
-   # else:
-   #    print("Flight Speeds:")
-   #    print(dd)
-
-
-   # # fog_min
-   # dd = count(td.fog_min)
-
-   # # check for reasonable siz
-   # if(len(dd) != 8):
-   #    print("l(fmin) = "+str(len(dd)))
-   # else:
-   #    print("Fog Min:")
-   #    print(dd)
-
-
-   # # fog_max
-   # dd = count(td.fog_max)
-
-   # # check for reasonable size
-   # if(len(dd) != 8):
-   #    print("l(fmax) = "+str(len(dd)))
-   # else:
-   #    print("Fog Max:")
-   #    print(dd)
-
-
-   return
+weird_moth = 'moth5_inc'
 
 # returns NULL if failed to load file
-def load_trials(path):
-   dfile = path+'/trials.csv'
-   if(osp.isfile(dfile)):
-      dt = pd.read_csv(dfile)
-   else:
-      print("(!) ERROR: trials.csv does not exist in "+path)
+def load_data(type,fpath):
+   if(not osp.isfile(fpath)):
+      print("(!) ERROR: "+fpath+" does not exist.")
       return None
-   #--debug
-   print(dt.iloc[0])
+
+   if(type == 'csv'):
+      dt = pd.read_csv(fpath,delimiter=',')
+   elif(type == 'h5'):
+      # get name of data set by file name
+      fname = fpath.split('/')[-1]
+      dt = pd.read_hdf(fpath,fname.split('.')[0])
+   else:
+      print("(!) ERROR: file type, "+type+", is unrecognized.")
+      dt = None
+
    return dt
 
 # plot some data
@@ -102,19 +31,24 @@ def main():
    if(argc == 2):
       path_to_data = sys.argv[1]
    else:
-      print("(!) ERROR: Invalid args, see usage.\nUsage: ./loadYoyoData path_to_data")
+      print("(!) ERROR: Invalid args, see usage.\nUsage: ./plot_moth_data path_to_data")
       return
+   # trim '/' off path
+   end = len(path_to_data)-1
+   if(path_to_data[end] == '/'):
+      path_to_data = path_to_data[:end]
 
-   # read trial data
-   dtrial = load_trials(path_to_data)
+   # read moth and tree data
+   dtree = load_data('csv',path_to_data+'/dark_trees.csv') # 12 labels (no obst)
+   dmoth = load_data('h5',path_to_data+'/moth_data.h5') # 13 labels
+   # check for loaded files
    # if(not dtrial):
    #    return
 
-   # count
-   count_trials(dtrial)
 
-   # read moth data
-   # dmoth=pd.read_hdf(path_to_data+'/moth_data.h5','moth_data')
+   print(moths[0])
+
+
 
 
    print("~~Done :)")
