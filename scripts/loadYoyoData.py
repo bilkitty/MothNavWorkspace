@@ -45,12 +45,6 @@ def main():
    # if(not dtrial):
    #    return
 
-
-   print(moths[0])
-
-
-
-
    print("~~Done :)")
    return
 
