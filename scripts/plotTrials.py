@@ -96,62 +96,12 @@ def main():
    # if(not dtrial):
    #    return
 
-   # select moth candidate
-   # moths = [0]*13
-   # for nn in range(1,13):
-   #    moths[nn-1] = dmoth.loc[dmoth['moth_id'] == 'moth'+str(nn)]
-   # moths[len(moths)-1] = dmoth.loc[dmoth['moth_id'] == weird_moth]
-
-   # #-- check that split was done correctly
-   # if(DEBUG):
-   #    moth_trial_count = [0]*13
-   #    nn = 0
-   #    for mm in moths:
-   #       moth_trial_count[nn] = len(mm)
-   #       nn += 1
-   #    if(not (sum(moth_trial_count) == len(dmoth))):
-   #       print("(!) moth trials don't add up to total trials")
-   #    else:
-   #       print("Trial count per moth:")
-   #       print(moth_trial_count)
-
-   # m1 = moths[0].loc[moths[0].flight_speed == 2.0]
-   # tree = dtree[0].loc[dtree[0].flight_speed == 2.0] # check that moth and datetime match
-   # plot(m1,tree)
-
-
    # test plot all of moth_n
    tt = get_trajs(dmoth,'bright',4.0,4.0,8.0,'moth2')
    trees = get_trajs(dtree,'bright',4.0,4.0,8.0,'moth2')
    # check that tt is not empty
    # check that tree is not emtpy
    plot(tt,trees,plot_output)
-
-
-
-
-# slice flight speeds
-   # jj = 1
-   # >>> for ii in range(0,4):
-   # ...    fspeeds[ii] = brights.loc[brights.flight_speed == jj]
-   # ...    jj *= 2
-
-# slice fmin (w/fs=2)
-   # jj = 2
-   # >>> for ii in range(0,3):
-   # ...    fmins[ii] = fs2.loc[fs2.fog_min == jj]
-   # ...    jj *= 2
-
-# slice fmax (w/fs=2,fmin=2)
-   # jj = 4
-   # >>> for ii in range(0,3):
-   # ...    fmaxs[ii] = fmin2.loc[fmin2.fog_max == jj]
-   # ...    jj *= 2
-
-# slice moth
-
-
-# plot traj
 
    print("~~Done :)")
    return
