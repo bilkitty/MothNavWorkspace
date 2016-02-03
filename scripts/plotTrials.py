@@ -8,14 +8,19 @@ import sys            # commandline args
 weird_moth = 'moth5_inc'
 DEBUG = True
 
+
 def plot(traj,env,targ_file):
+   # pts = traj[['pos_x','pos_y']][:]
+   # # won't plot because of index?
+   # pts.plot(kind = 'scatter');
+
    ax = plt.figure().add_subplot(111)
 
    print("plottig pts: "+str(len(traj)))
-   # ax.scatter(traj.pos_x,traj.pos_y,s=5,c='b',marker='.')
+   ax.scatter(traj.pos_x,traj.pos_y,s=5,c='b',marker='.')
 
-   print("plottig trees: "+str(len(env)))
-   ax.scatter(env.pos_x,env.pos_y,s=10,c='g',marker='o')
+   # print("plottig trees: "+str(len(env)))
+   # ax.scatter(env.pos_x,env.pos_y,s=10,c='g',marker='o')
 
    plt.title(traj.moth_id.iloc[0]+" in "+traj.obstacles.iloc[0]+" forest")
    plt.xlabel("x")
@@ -25,36 +30,68 @@ def plot(traj,env,targ_file):
    plt.savefig(targ_file)
    return
 
-# returns list of trajectories and trajectory count
+# returns dictionary of trajectories by start and end indecies
+# key = 't'+n, value = [range1,range2]
 def get_trajs(data,obst,speed,fmin,fmax,mid):
    # tree data has no obstacle field
    if('obstacles' in data.columns):
-      obs_slice = sel_obstacle(data,obst)
+      obs_slice = data[sel_obstacle(data,obst)]
    else:
-      obs_slice = data
+      obs_slice = data.copy(False)
 
-   moth_slice = sel_moth(sel_fmax(sel_fmin(sel_speed(obs_slice
-      ,speed)
-      ,fmin)
-      ,fmax)
-      ,mid)
+   moth_slice = obs_slice[sel_speed(data,speed)
+         & sel_fmin(data,fmin)
+         & sel_fmax(data,fmax)
+         & sel_moth(data,mid)]
 
-   return moth_slice
+   # extract however many trials exist in moth set
+   dd = {}
+   iit = 0
+   flight = 'f'
+   iprev = moth_slice.index[0]
+   start_new = False
+   dd[flight+str(iit)] = [iprev,0]
+
+   # save curr index as start of next trial
+   # when indices differ by > 1
+   # save prev index as end of curr trial
+   for ii in moth_slice.index[1:]:
+      if (ii - iprev) > 1:
+         dd[flight+str(iit)][1] = iprev
+         print("flight"+str(iit)+" : "+str(ii)+" - "+str(iprev))
+         iit += 1
+         dd[flight+str(iit)] = [ii,0]
+      # update
+      iprev = ii
+
+   # include last index
+   dd[flight+str(iit)][1] = moth_slice.index[-1]
+
+   #--DEBUG
+   # verify extraction by checking length
+   tlen=0
+   for el in dd.values():
+       tlen += len(data[el[0]:el[1]])
+
+   if(tlen != len(moth_slice)):
+     print("failed to obtain trajs")
+
+   return dd
 
 def sel_moth(block,name):
-   return block.loc[block.moth_id == name]
+   return block.moth_id == name
 
 def sel_obstacle(block,name):
-   return block.loc[block.obstacles == name]
+   return block.obstacles == name
 
 def sel_speed(block,val):
-   return block.loc[block.flight_speed == val]
+   return block.flight_speed == val
 
 def sel_fmin(block,val):
-   return block.loc[block.fog_min == val]
+   return block.fog_min == val
 
 def sel_fmax(block,val):
-   return block.loc[block.fog_max == val]
+   return block.fog_max == val
 
 # returns NULL if failed to load file
 def load_data(type,fpath):
@@ -82,7 +119,7 @@ def main():
       path_to_data = sys.argv[1]
       plot_output = sys.argv[2]
    else:
-      print("(!) ERROR: Invalid args, see usage.\nUsage: ./plot_moth_data path_to_data")
+      print("(!) ERROR: Invalid args, see usage.\nUsage: ./plot_moth_data path_to_data output.png")
       return
    # trim '/' off path
    end = len(path_to_data)-1
@@ -90,18 +127,20 @@ def main():
       path_to_data = path_to_data[:end]
 
    # read moth and tree data
-   dtree = load_data('csv',path_to_data+'/bright_trees.csv') # 12 labels (no obst)
-   dmoth = load_data('h5',path_to_data+'/moth_data.h5') # 13 labels
+   dtree = load_data("csv",path_to_data+"/bright_trees.csv") # 12 labels (no obst)
+   dmoth = load_data("h5",path_to_data+"/moth_data.h5") # 13 labels
    # check for loaded files
    # if(not dtrial):
    #    return
 
    # test plot all of moth_n
-   tt = get_trajs(dmoth,'bright',4.0,4.0,8.0,'moth2')
-   trees = get_trajs(dtree,'bright',4.0,4.0,8.0,'moth2')
+   trajs = get_trajs(dmoth,'bright',4.0,4.0,8.0,'moth1')
+   tt = dmoth[trajs['f0'][0]:trajs['f0'][1]]
+
+   # trees = get_trajs(dtree,'bright',4.0,4.0,8.0,'moth6')
    # check that tt is not empty
    # check that tree is not emtpy
-   plot(tt,trees,plot_output)
+   plot(tt,dtree,plot_output)
 
    print("~~Done :)")
    return
