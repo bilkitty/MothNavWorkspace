@@ -19,7 +19,22 @@ def plot(traj,env,targ_file):
    print("plottig pts: "+str(len(traj)))
    ax.scatter(traj.pos_x,traj.pos_y,s=5,c='b',marker='.')
 
-   # print("plottig trees: "+str(len(env)))
+   print("plottig trees: "+str(len(env)))
+
+   # save old header
+   # toadd = pd.DataFrame([[oldlabels[0],oldlabels[1],oldlabels[2]]],columns=['pos_x','pos_y','radius'])
+   # change column labels
+   # dtcopy.columns = toadd.columns
+   # dt.append(toadd)
+   print(len(env))
+   toappend = pd.DataFrame([[env.columns[0],env.columns[1],env.columns[2]]],
+      columns=['pos_x','pos_y','radius'])
+   env.columns = toappend.columns
+   env.append(toappend,ignore_index=True)
+   print(len(env))
+
+   for tree in env.values:
+      ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
    # ax.scatter(env.pos_x,env.pos_y,s=10,c='g',marker='o')
 
    plt.title(traj.moth_id.iloc[0]+" in "+traj.obstacles.iloc[0]+" forest")
@@ -74,7 +89,9 @@ def get_trajs(data,obst,speed,fmin,fmax,mid):
        tlen += len(data[el[0]:el[1]])
 
    if(tlen != len(moth_slice)):
-     print("failed to obtain trajs")
+      print("tlen: "+str(tlen))
+      print("ms: "+str(len(moth_slice)))
+      print("failed to obtain trajs")
 
    return dd
 
@@ -127,17 +144,16 @@ def main():
       path_to_data = path_to_data[:end]
 
    # read moth and tree data
-   dtree = load_data("csv",path_to_data+"/bright_trees.csv") # 12 labels (no obst)
+   dtree = load_data("csv","/media/usb/data_working/forest_sans_header.csv") # 12 labels (no obst)
    dmoth = load_data("h5",path_to_data+"/moth_data.h5") # 13 labels
    # check for loaded files
    # if(not dtrial):
    #    return
 
    # test plot all of moth_n
-   trajs = get_trajs(dmoth,'bright',4.0,4.0,8.0,'moth1')
+   trajs = get_trajs(dmoth,'bright',4.0,4.0,8.0,weird_moth)
    tt = dmoth[trajs['f0'][0]:trajs['f0'][1]]
 
-   # trees = get_trajs(dtree,'bright',4.0,4.0,8.0,'moth6')
    # check that tt is not empty
    # check that tree is not emtpy
    plot(tt,dtree,plot_output)
