@@ -69,7 +69,7 @@ def get_trajs(data,obst,speed,fmin,fmax,mid):
    # save prev index as end of curr trial
    for ii in moth_slice.index[1:]:
       if (ii - iprev) > 1:
-         dd[flight+str(iit)][1] = iprev
+         dd[flight+str(iit)][1] = iprev+1
          print("flight"+str(iit)+" : "+str(ii)+" - "+str(iprev))
          iit += 1
          dd[flight+str(iit)] = [ii,0]
@@ -77,7 +77,7 @@ def get_trajs(data,obst,speed,fmin,fmax,mid):
       iprev = ii
 
    # include last index
-   dd[flight+str(iit)][1] = moth_slice.index[-1]
+   dd[flight+str(iit)][1] = moth_slice.index[-1]+1
 
    #--DEBUG
    # verify extraction by checking length
