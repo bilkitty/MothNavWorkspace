@@ -4,6 +4,7 @@ import sys
 from loadYoyoData import load_data
 from extractTrajs import get_trajs
 from plotTrials import plot
+from collisions import count_collisions_closecalls
 
 weird_moth = 'moth5_inc'
 
@@ -21,19 +22,17 @@ def main():
       path_to_data = path_to_data[:end]
 
    # read moth and tree data
-   dtree = load_data("csv","/media/usb/data_working/forest_sans_header.csv") # 12 labels (no obst)
-   dmoth = load_data("h5","/media/usb/Input/moth_data.h5") # 13 labels
-   # check for loaded files
+   dtree = load_data("csv","/media/usb/Input/forest.csv")
+   dmoth = load_data("h5","../data/single_trials/moth1_448f0.h5")    # check for loaded files
    # if(not dtrial):
    #    return
 
-   # test plot all of moth_n
-   trajs = get_trajs(dmoth,'bright',4.0,4.0,8.0,weird_moth)
-   tt = dmoth[trajs['f0'][0]:trajs['f0'][1]]
-
    # check that tt is not empty
    # check that tree is not emtpy
-   plot(tt,dtree,plot_output)
+   # plot(tt,dtree,plot_output)
+
+   # detect collisions
+   count_collisions_closecalls(dmoth,dtree)
 
    print("~~Done :)")
    return
