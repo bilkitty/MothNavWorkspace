@@ -14,11 +14,11 @@ def plot(traj,env,targ_file):
 
    print("plottig trees: "+str(len(env)))
    # save tree in header
-   ax.add_patch(plt.Circle((int(float(env.columns[0]))
-      ,int(float(env.columns[1])))
-      ,int(float(env.columns[2]))
-      ,color='g'))
-   env.columns = ['pos_x','pos_y','radius']
+   # ax.add_patch(plt.Circle((int(float(env.columns[0]))
+   #    ,int(float(env.columns[1])))
+   #    ,int(float(env.columns[2]))
+   #    ,color='g'))
+   # env.columns = ['pos_x','pos_y','radius']
    for tree in env.values:
       ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
 

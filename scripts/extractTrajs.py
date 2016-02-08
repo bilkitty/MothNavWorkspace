@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # returns dictionary of trajectories by start and end indices
-# key = 't'+n, value = [range1,range2]
+# key = 'f'+n, value = [range1,range2]
 def get_trajs(data,obst,speed,fmin,fmax,mid):
    if('obstacles' in data.columns):
       obs_slice = data[sel_obstacle(data,obst)]
@@ -12,6 +12,10 @@ def get_trajs(data,obst,speed,fmin,fmax,mid):
          & sel_fmin(data,fmin)
          & sel_fmax(data,fmax)
          & sel_moth(data,mid)]
+
+   if(len(moth_slice) == 0):
+      print("(!) ERROR: Problem getting moth chunk")
+      return moth_slice
 
    # extract no. trials
    dd = {}
@@ -34,16 +38,15 @@ def get_trajs(data,obst,speed,fmin,fmax,mid):
    # don't forget last index
    dd[flight+str(iit)][1] = moth_slice.index[-1]+1
 
-   #--DEBUG
    # verify extraction by checking length
    tlen=0
    for el in dd.values():
        tlen += len(data[el[0]:el[1]])
 
    if(tlen != len(moth_slice)):
-      print("tlen: "+str(tlen))
-      print("ms: "+str(len(moth_slice)))
-      print("failed to obtain trajs")
+      # print("tlen: "+str(tlen))
+      # print("ms: "+str(len(moth_slice)))
+      print("(!) ERROR: Problem getting single trajs")
 
    return dd
 
