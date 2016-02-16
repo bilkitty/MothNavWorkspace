@@ -32,8 +32,6 @@ def count_collisions_closecalls(traj,env):
 
    #DEBUG
    ax = plt.figure().add_subplot(111)
-   # for tn in env.values:
-   #    ax.add_patch(plt.Circle((tn[0],tn[1]),tn[2],color='g'))
 
    for pn in points.values:
       l_cutoff = env.x > pn[0]-2*Rmax
@@ -43,22 +41,28 @@ def count_collisions_closecalls(traj,env):
 
       tclose = env[l_cutoff & r_cutoff & u_cutoff & b_cutoff]
       if len(tclose) > 0:
-         print("tclose: "+str(len(tclose)))
          print("p: ("+str(pn[0])+','+str(pn[1])+')')
+         print("tclose: "+str(len(tclose)))
 
-      # detect a collision within patch bruh
-
+      # draw trees within patch bruh
       for tn in tclose.index:
-         if tn in undrawn_trees:
-            ax.add_patch(plt.Circle((tclose[tn][0]
-               ,tclose.iloc[tn][1])
-               ,tclose.iloc[tn][2]
+         print("drawing close trees...")
+         if tn in undrawn_trees.values:
+            ax.add_patch(plt.Circle((tclose.loc[tn][0]
+               ,tclose.loc[tn][1])
+               ,tclose.loc[tn][2]
                ,color='r'))
-            undrawn_trees.delete(tn)
-      print(len(undrawn_trees))
+            undrawn_trees = undrawn_trees.delete(tn)
 
-         # no possible collision
-      ax.add_patch(plt.Circle((pn[0],pn[1]),.2,color='b'))
+      # draw traj point
+      ax.add_patch(plt.Circle((pn[0],pn[1]),.05,color='b'))
+
+   # draw remaining trees
+   for tn in undrawn_trees.values:
+      ax.add_patch(plt.Circle((env.loc[tn][0]
+         ,env.loc[tn][1])
+         ,env.loc[tn][2]
+         ,color='g'))
 
    plt.xlim(min(env.x),max(env.x))
    plt.ylim(min(env.y),max(env.y))
