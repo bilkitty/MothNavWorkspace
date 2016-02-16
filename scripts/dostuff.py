@@ -22,8 +22,8 @@ def main():
       path_to_data = path_to_data[:end]
 
    # read moth and tree data
-   dtree = load_data("csv","/media/usb/Input/forest.csv")
-   dmoth = load_data("h5","../data/single_trials/moth1_448f0.h5")    # check for loaded files
+   dtree = load_data("csv","../data/test/forest.csv")
+   dmoth = load_data("csv","../data/test/moth6_single.csv")    # check for loaded files
    # if(not dtrial):
    #    return
 
