@@ -3,10 +3,8 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 
-BUFF = 1
-
 # returns true if collision occurs
-def detect_collision(pmoth,ptree,Rmax):
+def detect_collision(pmoth,patch,Rmax):
    #        compute distance = pm - pt
    #        return edge of moth within trad  # sq(D) < sq(trad + mrad)
 
@@ -28,28 +26,38 @@ def count_collisions_closecalls(traj,env):
    #           count collision
    #        else:
    #           count closecall
-   Rmax = max(env.x)
+   Rmax = max(env.r)
    points = traj[['pos_x','pos_y','head_x','head_y']]
+   undrawn_trees = env.index
 
    #DEBUG
    ax = plt.figure().add_subplot(111)
-   for tn in env.values:
-      ax.add_patch(plt.Circle((tn[0],tn[1]),tn[2],color='g'))
+   # for tn in env.values:
+   #    ax.add_patch(plt.Circle((tn[0],tn[1]),tn[2],color='g'))
 
    for pn in points.values:
-      # # pn = pt[0]
-      # for tn in env.values:
-      #    # tn = tree[0]
-      #    # dx = (pn[0]-tn[0])**2
-      #    # dy = (pn[1]-tn[1])**2
-      #    # if (dx + dy) <= Rmax**2:
-      #    # if ((pn[0]-tn[0])**2 + (pn[1]-tn[1])**2) <= Rmax**2:
+      l_cutoff = env.x > pn[0]-2*Rmax
+      r_cutoff = env.x < pn[0]+2*Rmax
+      u_cutoff = env.y < pn[1]+2*Rmax
+      b_cutoff = env.y > pn[1]-2*Rmax
 
-      #    if( tn[0] < pn[0]+Rmax+BUFF and tn[0] > pn[0]-Rmax-BUFF
-      #      and tn[1] < pn[1]+Rmax+BUFF and tn[1] > pn[1]-Rmax-BUFF ):
-      #       # detect a collision bruh
-      #       ax.add_patch(plt.Circle((tn[0],tn[1]),tn[2],color='r'))
-      #       # no possible collision
+      tclose = env[l_cutoff & r_cutoff & u_cutoff & b_cutoff]
+      if len(tclose) > 0:
+         print("tclose: "+str(len(tclose)))
+         print("p: ("+str(pn[0])+','+str(pn[1])+')')
+
+      # detect a collision within patch bruh
+
+      for tn in tclose.index:
+         if tn in undrawn_trees:
+            ax.add_patch(plt.Circle((tclose[tn][0]
+               ,tclose.iloc[tn][1])
+               ,tclose.iloc[tn][2]
+               ,color='r'))
+            undrawn_trees.delete(tn)
+      print(len(undrawn_trees))
+
+         # no possible collision
       ax.add_patch(plt.Circle((pn[0],pn[1]),.2,color='b'))
 
    plt.xlim(min(env.x),max(env.x))
