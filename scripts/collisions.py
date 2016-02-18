@@ -3,7 +3,7 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 
-PATCH_SIZE = 20; # search_space (in Rmax units)
+PATCH_SIZE = 10; # search_space (in Rmax units)
 R_CLOSECALL = 10; # distance (in Rmax units) from tree edge
                  # and moth edge that counts as close call
 #MOTH_RAD = 0; # moth radius is negl. small compared to tree rad
@@ -99,6 +99,7 @@ def count_collisions_closecalls(traj,env):
       ,max(max(env.x),max(traj['pos_x'])))
    plt.ylim(min(min(env.y),min(traj['pos_y']))
       ,max(max(env.y),max(traj['pos_y'])))
+   plt.title(traj.moth_id[0]+" collision (r) closecalls (b) patchsz="+str(PATCH_SIZE))
    # plt.show()
 
    # prompt to save figure

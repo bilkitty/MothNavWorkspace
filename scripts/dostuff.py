@@ -10,16 +10,16 @@ weird_moth = 'moth5_inc'
 
 def main():
    argc = len(sys.argv)
-   if(argc == 3):
-      path_to_data = sys.argv[1]
-      plot_output = sys.argv[2]
-   else:
-      print("(!) ERROR: Invalid args, see usage.\nUsage: ./plot_moth_data path_to_data output.png")
-      return
-   # trim '/' off path
-   end = len(path_to_data)-1
-   if(path_to_data[end] == '/'):
-      path_to_data = path_to_data[:end]
+   # if(argc == 3):
+   #    path_to_data = sys.argv[1]
+   #    plot_output = sys.argv[2]
+   # else:
+   #    print("(!) ERROR: Invalid args, see usage.\nUsage: ./plot_moth_data path_to_data output.png")
+   #    return
+   # # trim '/' off path
+   # end = len(path_to_data)-1
+   # if(path_to_data[end] == '/'):
+   #    path_to_data = path_to_data[:end]
 
    # read moth and tree data
    dtree = load_data("csv","../data/test/forest.csv")
