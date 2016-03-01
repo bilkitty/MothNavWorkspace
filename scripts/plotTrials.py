@@ -3,7 +3,12 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-def visualize(file):
+# Displays plot if no filename is
+# specified otherwise save plot
+# using file arg
+# ARGS: plot, filename
+# RETURNS: void
+def visualize(plt,file):
    if(targ_file == None):
       plt.show()
    else:
@@ -34,7 +39,7 @@ def plot_mat(mat,bsz,targ_file=None):
    plt.ylabel("discritized y")
    plt.ylim(-1,szy)
 
-   visualize(targ_file)
+   visualize(plt,targ_file)
    return
 
 def plot(traj,env,targ_file=None):
@@ -52,23 +57,29 @@ def plot(traj,env,targ_file=None):
    else:
       plt.title(traj.moth_id.iloc[0]+" in bright forest")
    plt.xlabel("x")
-   plt.xlim(min(min(env.x),min(traj.pos_x)),max(max(env.x),max(traj.pos_x)))
+   plt.xlim(
+      min(min(env.x),min(traj.pos_x)),
+      max(max(env.x),max(traj.pos_x)))
    plt.ylabel("y")
-   plt.ylim(min(min(env.y),min(traj.pos_y)),max(max(env.y),max(traj.pos_y)))
+   plt.ylim(
+      min(min(env.y),min(traj.pos_y)),
+      max(max(env.y),max(traj.pos_y)))
 
-   visualize(targ_file)
+   visualize(plt,targ_file)
    return
 
 def plot_frame(pt,patch,size,env,targ_file=None):
    ax = plt.figure().add_subplot(111)
 
    print("plotting trees: "+str(len(env)))
+   # plot trees outside of patch
    for tree in env.values:
       if(not(tree[0] in patch.x and tree[1] in patch.y and tree[2] in patch.r)):
          ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
 
    print("plotting point and patch: "+str(len(patch)))
    ax.scatter(pt.pos_x,pt.pos_y,s=100*max(env.r),c='b',marker='x')
+   # plot trees in patch
    for tree in patch.values:
       ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='c'))
    # draw boundary of patch in case no trees are in it
@@ -83,9 +94,13 @@ def plot_frame(pt,patch,size,env,targ_file=None):
 
    plt.title("scoring window centered on moth")
    plt.xlabel("x")
-   plt.xlim(min(min(env.x),pt.pos_x),max(max(env.x),pt.pos_x))
+   plt.xlim(
+      min(min(env.x),pt.pos_x),
+      max(max(env.x),pt.pos_x))
    plt.ylabel("y")
-   plt.ylim(min(min(env.y),pt.pos_y),max(max(env.y),pt.pos_y))
+   plt.ylim(
+      min(min(env.y),pt.pos_y),
+      max(max(env.y),pt.pos_y))
 
-   visualize(targ_file)
+   visualize(plt,targ_file)
    return
