@@ -25,14 +25,17 @@ def score(pt,patch,size,rmin):
 
    return ret
 
+def get_center_block():
+   return
 
-
-# given patch and size, collect points
-# in bins of size/4
+# Divide patch into min tree radius/2 sized
+# blocks and bin tree points into a matrix
+# MxM.
+# ARGS: moth point, tree patch, patch size,
+#   min(tree radius)
+# RETURNS: matrix MxM, block size, where
+#   M = 2*patch/block size (odd)
 def discretize(pt,patch,sz,rmin):
-  # matrix MxM representing a mask of trees
-  # calculate M
-
   # test with large blocks first
   SZb = rmin/2
   Nb = int(2*sz/SZb)
@@ -52,8 +55,8 @@ def discretize(pt,patch,sz,rmin):
      ty2py = tt[1] - pt.pos_y
      print("dy="+str(ty2py)+", dx="+str(tx2px))
      # get half blocks between mcenter and tcenter
-     ihalf = int( 2*ty2py/SZb ) # rows are y
-     jhalf = int( 2*tx2px/SZb ) # cols are x
+     ihalf = int( 2*tx2px/SZb ) # cols are x
+     jhalf = int( 2*ty2py/SZb ) # rows are y
      print("ih="+str(ihalf)+", jh="+str(jhalf))
      bi = ihalf if abs(ihalf) < 2 else int(ihalf/2)
      bj = jhalf if abs(jhalf) < 2 else int(jhalf/2)
@@ -62,13 +65,14 @@ def discretize(pt,patch,sz,rmin):
      print("bi="+str(bi)+", bj="+str(bj))
 
      # indicate tree center in matrix index
-     Bi = -1 * btt[0]; # reverse y direction
+     Bi = btt[0];
      Bj = btt[1];
-     mat[(Nb/2)+Bi][(Nb/2)+Bj] = cnt+1
+     mat[(Nb/2)+Bi][(Nb/2)+Bj] = cnt+1 # show which tree is where
+     # mat[(Nb/2)+Bi][(Nb/2)+Bj] = 1
 
      cnt += 1
 
-  return mat
+  return [mat,SZb]
 
 # sets up tree patch centered on single point
 # from moth traj and tree data.
