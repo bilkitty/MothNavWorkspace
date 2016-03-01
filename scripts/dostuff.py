@@ -1,16 +1,10 @@
 #!/usr/bin/python3
 
-import sys
 from loadYoyoData import load_data
-from extractTrajs import get_trajs
-from plotTrials import plot
-from collisions import count_collisions_closecalls
-from score import setup_test
-
-weird_moth = 'moth5_inc'
+from plotTrials import plot_frame, plot_mat
+from score import setup_test, discretize
 
 def main():
-   argc = len(sys.argv)
    # read moth and tree data
    dtree = load_data("csv","../data/test/forest.csv")
    dmoth = load_data("csv","../data/test/moth6_single.csv")    # check for loaded files
@@ -21,7 +15,14 @@ def main():
       return
 
    # setup test data
-   setup_test(dmoth,dtree)
+   [pt,patch,sz] = setup_test(dmoth,dtree)
+
+   # get discretrized matrix
+   [mat,bsize] = discretize(pt,patch,sz,min(dtree.r)/2)
+
+   plot_frame(pt,patch,sz,dtree,"../data/test/moth6_frame.png")
+   plot_mat(mat,bsize,"../data/test/moth6_kernel.png")
+
 
    print("~~Done :)")
    return
