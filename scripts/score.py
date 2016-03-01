@@ -42,18 +42,17 @@ def discretize(pt,patch,sz,rmin):
   # make sure matrix is oddxodd
   Nb += (Nb+1)%2
   mat = np.zeros((Nb,Nb))
-  mat.shape # see size
 
   # show moth block bm(0,0)
   mat[Nb/2][Nb/2] = -1
 
-  cnt = 0
+  cnt = 0 #debug
   for tt in patch.values:
      print("tree:"+str(cnt))
      # get deltax, deltay of tree/moth
      tx2px = tt[0] - pt.pos_x
      ty2py = tt[1] - pt.pos_y
-     print("dy="+str(ty2py)+", dx="+str(tx2px))
+     print("dx="+str(ty2py)+", dy="+str(tx2px))
      # get half blocks between mcenter and tcenter
      ihalf = int( 2*tx2px/SZb ) # cols are x
      jhalf = int( 2*ty2py/SZb ) # rows are y
