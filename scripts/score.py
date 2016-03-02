@@ -48,6 +48,7 @@ def discretize(pt,patch,sz,rmin):
     patch = patch.values
 
   print("discretizing")
+  print("  patch origin: "+str(pt))
   print("  patch contains: "+str(len(patch)))
   print("  patch size: "+str(sz))
 

@@ -15,7 +15,7 @@ def main():
       printf("(!) ERROR: No data loaded.")
       return
 
-   walkTraj.walk(dmoth,dtree)
+   walkTraj.walk(dmoth,dtree,display=True)
    # # setup test data
    # [pt,patch,sz] = setup_test(dmoth,dtree)
 
