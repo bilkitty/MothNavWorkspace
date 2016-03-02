@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from loadYoyoData import load_data
-from plotTrials import plot_frame, plot_mat
+from plotStuff import plot_frame, plot_mat
 from score import setup_test, discretize
 
 def main():
