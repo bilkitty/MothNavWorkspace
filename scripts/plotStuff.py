@@ -41,8 +41,8 @@ def plot_mat(mat,bsz,targ_file=None):
             else:
                ax.scatter(row,col,s=bsz*100,c='r',marker='x')
 
-   plt.title("kernel (block_size="+str(round(bsz,5))
-      +" ksize="+str(round(bsz*szx,5))+")")
+   plt.title("matrix (block_size="+str(round(bsz,5))
+      +" msize="+str(round(bsz*szx,5))+")")
    plt.xlabel("discritized x")
    plt.xlim(-1,szx)
    plt.ylabel("discritized y")
