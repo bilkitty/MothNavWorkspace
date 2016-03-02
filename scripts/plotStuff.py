@@ -25,7 +25,8 @@ def visualize(plt,filename):
 #   filename (optional)
 # RETURNS: void
 def plot_mat(mat,bsz,targ_file=None):
-   ax = plt.figure().add_subplot(111)
+   fig = plt.figure()
+   ax = fig.add_subplot(111)
    ax.set_axis_bgcolor('black');
 
    # get matrix shape
@@ -49,7 +50,7 @@ def plot_mat(mat,bsz,targ_file=None):
    plt.ylim(-1,szy)
 
    visualize(plt,targ_file)
-   return
+   return fig
 
 # displays objects in environment and
 # trajectory path. Pass a filename to

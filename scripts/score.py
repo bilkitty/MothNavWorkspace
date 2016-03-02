@@ -3,12 +3,21 @@
 from plotStuff import plot_frame
 import numpy as np
 import pandas as pd
-import time
 
 PAD = 0  # pad patch for discritization
 
+def is_square_mat(mat):
+   if(mat.shape[0] == 0 or mat.shape[1] == 0):
+      print("(!) Mat is flat or empty")
+      return False
+
+   return mat.shape[0] == mat.shape[1]
+
 def score_frame(mask,kernel):
    ret = 0 # elem wise mult and sum
+   if(is_square_mat(mask) and is_square_mat(kernel)):
+     prod = np.multiply(mask,kernel)
+     ret = prod.sum()
 
    return ret
 
