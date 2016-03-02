@@ -20,8 +20,11 @@ def main():
    # get discretrized matrix
    [mat,bsize] = discretize(pt,patch,sz,min(dtree.r)/2)
 
-   plot_frame(pt,patch,sz,dtree,"../data/test/moth6_frame.png")
-   plot_mat(mat,bsize,"../data/test/moth6_kernel.png")
+   # plot_frame(pt,patch,sz,dtree,"../data/test/moth6_frame.png")
+   # plot_mat(mat,bsize,"../data/test/moth6_kernel.png")
+
+   plot_frame(pt,patch,sz,dtree)#,"moth6_frame.png")
+   plot_mat(mat,bsize)#,"moth6_kernel.png")
 
 
    print("~~Done :)")

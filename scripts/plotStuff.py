@@ -37,9 +37,9 @@ def plot_mat(mat,bsz,targ_file=None):
       for col in range(0,szy):
          if mat[row][col] != 0:
             if mat[row][col] < 0:
-               ax.scatter(row,col,s=50,c='b',marker='x')
+               ax.scatter(row,col,s=bsz*100,c='b',marker='x')
             else:
-               ax.scatter(row,col,s=50,c='r',marker='o')
+               ax.scatter(row,col,s=bsz*100,c='r',marker='x')
 
    plt.title("kernel (block_size="+str(round(bsz,5))
       +" ksize="+str(round(bsz*szx,5))+")")
