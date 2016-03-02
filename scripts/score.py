@@ -76,7 +76,7 @@ def discretize(pt,patch,sz,rmin):
      rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
 
      # create mask of ones over center+root(2)/2
-     mask = cnt*np.ones((2*rb[0]+1,2*rb[0]+1),dtype=int)
+     mask = (cnt+1)*np.ones((2*rb[0]+1,2*rb[0]+1),dtype=int)
 
      # set indices of mat[ti,tj] using mask
      xmin = Mi - rb[0]
