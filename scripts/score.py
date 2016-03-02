@@ -60,30 +60,37 @@ def discretize(pt,patch,sz,rmin):
   mat = np.zeros((Nb,Nb),dtype=int)
 
   # show moth block bm(0,0)
-  mat[Nb/2][Nb/2] = -1
+  mat[int(Nb/2)][int(Nb/2)] = -1
 
   cnt = 0 #debug
   for tt in patch:
      print("tree:"+str(cnt))
+     # get tree center
      itt = map_to_mat_idx(tt,pt,SZb)
+     Mi = int(Nb/2)+itt[0];
+     Mj = int(Nb/2)+itt[1];
 
-     # get n blocks from tree center to edge
+     # convert tree radius to nblocks
+     rr =  tt[2]*2**.5
+     rr /= 2
+     rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
 
-     # create mat(nxn) of ones as mask
+     # create mask of ones over center+root(2)/2
+     mask = cnt*np.ones((2*rb[0]+1,2*rb[0]+1),dtype=int)
 
      # set indices of mat[ti,tj] using mask
+     xmin = Mi - rb[0]
+     xmax = Mi + rb[0]
+     ymin = Mj - rb[0]
+     ymax = Mj + rb[0]
 
-     Mi = (Nb/2)+itt[0];
-     Mj = (Nb/2)+itt[1];
+     # apply mask over tree center
+     mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
      # view error in reconstructing xy distance b/w tree and moth center
-     print("  ii="+str(itt[0])+", jj="+str(itt[1]))
+     print("  Mi="+str(Mi)+", Mj="+str(Mj))
      print("  tx="+str(tt[0])+"~ii*bsz+px="+str(itt[0]*SZb+pt[0]))
      print("  ty="+str(tt[1])+"~jj*bsz+px="+str(itt[1]*SZb+pt[1]))
-
-     # indicate tree center in matrix index
-     mat[Mi][Mj] = cnt+1 # show which tree is where
-     # mat[(Nb/2)+Bi][(Nb/2)+Bj] = 1
 
      cnt += 1
 
