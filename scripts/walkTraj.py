@@ -4,9 +4,11 @@ import pandas as pd
 import numpy as np
 from score import get_patch \
                   ,discretize \
-                  ,score_frame
+                  ,score_frame \
+                  ,is_square_mat
 from plotStuff import plot_mat
 import time
+import sys
 
 # generate score for single traj point
 
@@ -35,17 +37,11 @@ def generateKernel(ktype,size):
    # otherwise return uniform
    return ret
 
-def is_square_mat(mat):
-   if(mat.shape[0] == 0 or mat.shape[1] == 0):
-      print("(!) Mat is flat or empty")
-      return False
-
-   return mat.shape[0] == mat.shape[1]
-
-
 # think about keeping data frames as is for simplicity
 def walk(dm, td, ktype='uniform', display=False):
    cummulative_score = 0
+   min_score = sys.maxsize
+   max_score = -sys.maxsize - 1
    # get moth xy data from data frame
    dm = dm[['pos_x','pos_y']]
    # make sure there are data in moth data frame
@@ -59,8 +55,10 @@ def walk(dm, td, ktype='uniform', display=False):
       return 1
 
    # measure processing times
-   # 0 = get_patch, 1 = discritize
-   procTime = [0.,0.]
+   # 0 = get_patch, 1 = discritize, 2 = score_frame
+   procTime = [0.,0.,0.]
+   cnt = 1
+   score_cnt = 0
    # get mask of first point
    start = time.time()
    [patch,sz] = get_patch(dm.loc[0],td)
@@ -73,14 +71,19 @@ def walk(dm, td, ktype='uniform', display=False):
    kernel = generateKernel(ktype,mask.shape[0])
    # initialize score
    if(is_square_mat(mask) and is_square_mat(kernel)):
-      cummulative_score += score_frame(mask,kernel)
+      start = time.time()
+      score = score_frame(mask,kernel)
+      if(score < min_score): min_score = score
+      if(max_score < score): max_score = score
+      cummulative_score += score
+      procTime[2] += time.time() - start
+      score_cnt += 1
    else:
       print("(!) Either mask or kernel is not square")
 
    if(display):
       plot_mat(mask,bsize,"initial_mask.png")
 
-   cnt = 1
    # process other points
    for point in dm.values[1:5]:
       # get scoring region, may contain trees
@@ -95,7 +98,13 @@ def walk(dm, td, ktype='uniform', display=False):
 
       # update score
       if(is_square_mat(mask) and is_square_mat(kernel)):
-         cummulative_score += score_frame(mask,kernel)
+         start = time.time()
+         score = score_frame(mask,kernel)
+         if(score < min_score): min_score = score
+         if(max_score < score): max_score = score
+         cummulative_score += score
+         procTime[2] += time.time() - start
+         score_cnt += 1
       else:
          print("(!) Either mask or kernel is not square")
 
@@ -105,8 +114,10 @@ def walk(dm, td, ktype='uniform', display=False):
       cnt += 1
 
    print("cummulative_score: "+str(cummulative_score))
+   print("min_score: "+str(min_score))
+   print("max_score: "+str(max_score))
    print("get_patch avg PT(ms): "+str(round(procTime[0]/cnt,5)))
    print("discretize avg PT(ms): "+str(round(procTime[1]/cnt,5)))
-
+   print("score_frame avg PT(ms): "+str(round(procTime[2]/cnt,5)))
 
    return 0
