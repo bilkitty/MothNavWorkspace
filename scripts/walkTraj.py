@@ -58,9 +58,17 @@ def walk(dm, td, ktype='uniform', display=False):
          +" & len:"+str(len(td.values[0])))
       return 1
 
+   # measure processing times
+   # 0 = get_patch, 1 = discritize
+   procTime = [0.,0.]
    # get mask of first point
+   start = time.time()
    [patch,sz] = get_patch(dm.loc[0],td)
+   procTime[0] += time.time() - start
+
+   start = time.time()
    [mask, bsize] = discretize(dm.loc[0],patch,sz,min(td.r))
+   procTime[1] += time.time() - start
    # initialize kernel
    kernel = generateKernel(ktype,mask.shape[0])
    # initialize score
@@ -72,14 +80,19 @@ def walk(dm, td, ktype='uniform', display=False):
    if(display):
       plot_mat(mask,bsize,"initial_mask.png")
 
-   cnt = 0
+   cnt = 1
    # process other points
    for point in dm.values[1:5]:
       # get scoring region, may contain trees
+      start = time.time()
       [patch,sz] = get_patch(point,td)
+      procTime[0] += time.time() - start
 
       # discretize that shit
+      start = time.time()
       [mask, bsize] = discretize(point,patch,sz,min(td.r))
+      procTime[1] += time.time() - start
+
       # update score
       if(is_square_mat(mask) and is_square_mat(kernel)):
          cummulative_score += score_frame(mask,kernel)
@@ -92,7 +105,8 @@ def walk(dm, td, ktype='uniform', display=False):
       cnt += 1
 
    print("cummulative_score: "+str(cummulative_score))
-
+   print("get_patch avg PT(ms): "+str(round(procTime[0]/cnt,5)))
+   print("discretize avg PT(ms): "+str(round(procTime[1]/cnt,5)))
 
 
    return 0

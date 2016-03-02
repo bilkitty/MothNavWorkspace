@@ -22,6 +22,7 @@ def load_data(type,fpath):
    else:
       print("(!) ERROR: file type, "+type+", is unrecognized.")
       dt = None
-   print("finished in: "+ str(time.time() - start)+"ms")
+
+   print("  PT(ms): "+ str(round(1000*(time.time() - start),5)))
 
    return dt
