@@ -5,6 +5,7 @@ import numpy as np
 from score import get_patch \
                   ,discretize \
                   ,score_frame
+import time
 
 # generate score for single traj point
 
@@ -21,13 +22,12 @@ from score import get_patch \
 # pass that ish to score
 # record result as text and in plot
 # save plot and text
-KERNELS = ['uniform','vslit','gaussian']
 
 # generate a kernel whose
-def generateKernel(ntype,size):
+def generateKernel(ktype,size):
    ret = np.ones((size,size),dtype=int)
    # create vertical split
-   if(ntype == 2):
+   if(ktype == 'vertical split'):
       ret[ret.shape[0]/2] = -1
       ret = ret.T
 
@@ -35,19 +35,15 @@ def generateKernel(ntype,size):
    return ret
 
 # think about keeping data frames as is for simplicity
-def walk(dm, td, nkern=0, display=False):
+def walk(dm, td, ktype='uniform', display=False):
    # get moth xy data from data frame
-   # if(isinstance(dm,pd.DataFrame) or isinstance(dm,pd.Series)):
-   #    dm = dm[['pos_x','pos_y']].values
-   # if(isinstance(td,pd.DataFrame) or isinstance(td,pd.Series)):
-   #    td = td.values
    dm = dm[['pos_x','pos_y']]
    # make sure there are data in moth data frame
    if(len(dm.values) == 0 or len(dm.values[0]) != 2):
       print("(!) Cannot process traj data of size:"+str(len(dm.values))\
          +" & len:"+str(len(dm.values[0])))
       return 1
-   if(len(td.values) == 0 or len(td.values) != 3):
+   if(len(td.values) == 0 or len(td.values[0]) != 3):
       print("(!) Cannot process tree data of size:"+str(len(td.values))\
          +" & len:"+str(len(td.values[0])))
       return 1
@@ -56,7 +52,7 @@ def walk(dm, td, nkern=0, display=False):
    [patch,sz] = get_patch(dm.loc[0],td)
    [mask, bsize] = discretize(dm.loc[0],patch,sz,min(td.r))
    # initialize kernel
-   kernel = generateKernel(nkern,mask.shape[0])
+   kernel = generateKernel(ktype,mask.shape[0])
    # initialize score
    cummulative_score = score_frame(mask,kernel)
 
