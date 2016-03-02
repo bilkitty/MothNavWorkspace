@@ -3,14 +3,16 @@
 from plotStuff import plot_frame
 import numpy as np
 import pandas as pd
+import time
 
 PAD = 0  # pad patch for discritization
 
-def score(pt,patch,size,rmin):
-   ret = 0 # convolution result
+def score_frame(mask,kernel):
+   ret = 0 # elem wise mult and sum
 
    return ret
 
+# ------ move to discretize.py --------#
 # computes matrix indices as ith-block and
 # jth-block between tcenter and origin.
 def map_to_mat_idx(tcenter,orig,bsize):
@@ -49,6 +51,9 @@ def discretize(pt,patch,sz,rmin):
   print("  patch contains: "+str(len(patch)))
   print("  patch size: "+str(sz))
 
+  if(rmin < 0):
+    print("(!) Negative rmin")
+    return None
   # get block size
   SZb = rmin/2
   print("  blocksize: "+str(SZb))
@@ -57,6 +62,9 @@ def discretize(pt,patch,sz,rmin):
   Nb = int(2*sz/SZb)
   # make sure matrix is oddxodd
   Nb += (Nb+1)%2
+  # if(Nb > INTMAX)
+  #   print("(!) Negative rmin")
+  #   return None
   mat = np.zeros((Nb,Nb),dtype=int)
 
   # show moth block bm(0,0)
@@ -95,6 +103,7 @@ def discretize(pt,patch,sz,rmin):
      cnt += 1
 
   return [mat,SZb]
+# ------ move to discretize.py --------#
 
 # generates data frame slice of env objects
 # contained within a square around origin.
