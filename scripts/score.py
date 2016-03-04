@@ -3,8 +3,9 @@
 from plotStuff import plot_frame
 import numpy as np
 import pandas as pd
+import sys
 
-PAD = 0  # pad patch for discritization
+PAD = 10  # pad patch for discritization
 
 def is_square_mat(mat):
    if(mat.shape[0] == 0 or mat.shape[1] == 0):
@@ -18,7 +19,9 @@ def score_frame(mask,kernel):
    if(is_square_mat(mask) and is_square_mat(kernel)):
      prod = np.multiply(mask,kernel)
      ret = prod.sum()
-
+   # is this meaningful?
+   # represent score as percent coverage if kernel is uniform ones
+   ret = 1 - ret/mask.shape[0]/mask.shape[1]
    return ret
 
 # ------ move to discretize.py --------#
@@ -27,7 +30,7 @@ def score_frame(mask,kernel):
 def map_to_mat_idx(tcenter,orig,bsize):
   # use np arrays
   if(isinstance(orig,pd.Series)):
-    origin = origin.values
+    orig = orig.values
 
   # get deltax, deltay of tree/moth
   tx2px = tcenter[0] - orig[0]
@@ -49,6 +52,8 @@ def map_to_mat_idx(tcenter,orig,bsize):
 # RETURNS: matrix MxM, block size, where
 #   M = 2*patch/block size (odd)
 def discretize(pt,patch,sz,rmin):
+  xerror = 0
+  yerror = 0
   # use np arrays
   if(isinstance(pt,pd.Series)):
     pt = pt.values
@@ -56,45 +61,49 @@ def discretize(pt,patch,sz,rmin):
     or isinstance(patch,pd.Series)):
     patch = patch.values
 
-  print("discretizing")
-  print("  patch origin: "+str(pt))
-  print("  patch contains: "+str(len(patch)))
-  print("  patch size: "+str(sz))
+  # print("discretizing")
+  # print("  patch origin: "+str(pt))
+  # print("  patch contains: "+str(len(patch)))
+  # print("  patch size: "+str(sz))
 
   if(rmin < 0):
     print("(!) Negative rmin")
     return None
   # get block size
   SZb = rmin/2
-  print("  blocksize: "+str(SZb))
+  # print("  blocksize: "+str(SZb))
 
   # initialize matrix
   Nb = int(2*sz/SZb)
-  # make sure matrix is oddxodd
+  # make sure matrix is oddxodd and not ridiculously large
   Nb += (Nb+1)%2
-  # if(Nb > INTMAX)
-  #   print("(!) Negative rmin")
-  #   return None
+  if(sys.maxsize < Nb):
+    print("(!) outrageous mat size, block size is too small")
+    return None
+
+  # init matrix that hold binary values
   mat = np.zeros((Nb,Nb),dtype=int)
 
   # show moth block bm(0,0)
   mat[int(Nb/2)][int(Nb/2)] = -1
 
-  cnt = 0 #debug
+  cnt = 1 #debug
   for tt in patch:
-     print("tree:"+str(cnt))
      # get tree center
      itt = map_to_mat_idx(tt,pt,SZb)
      Mi = int(Nb/2)+itt[0];
      Mj = int(Nb/2)+itt[1];
 
+     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
+       print("  tree:"+str(cnt))
+       print("  (!) Out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
+       cnt += 1
+       continue
+
      # convert tree radius to nblocks
      rr =  tt[2]*2**.5
      rr /= 2
      rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
-
-     # create mask of ones over center+root(2)/2
-     mask = (cnt+1)*np.ones((2*rb[0]+1,2*rb[0]+1),dtype=int)
 
      # set indices of mat[ti,tj] using mask
      xmin = Mi - rb[0]
@@ -102,30 +111,55 @@ def discretize(pt,patch,sz,rmin):
      ymin = Mj - rb[0]
      ymax = Mj + rb[0]
 
+     # handle trees partially cuttoff
+     if(xmin < 0):
+       xmin = 0
+     if(mat.shape[0] <= xmax):
+       xmax = mat.shape[0]
+     if(ymin < 0):
+       ymin = 0
+     if(mat.shape[0] <= ymax):
+       ymax = mat.shape[0]
+
+     # create mask of ones over center+root(2)/2
+     xsize = xmax - xmin
+     ysize = ymax - ymin
+     mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
+     mask = mask.T
+
      # apply mask over tree center
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
+     # mark tree center (help see center of partically cuttoff tree)
+     mat[Mi][Mj] = -1*cnt
+
      # view error in reconstructing xy distance b/w tree and moth center
-     print("  Mi="+str(Mi)+", Mj="+str(Mj))
-     print("  tx="+str(tt[0])+"~ii*bsz+px="+str(itt[0]*SZb+pt[0]))
-     print("  ty="+str(tt[1])+"~jj*bsz+px="+str(itt[1]*SZb+pt[1]))
+     xerr = abs(tt[0]-itt[0]*SZb-pt[0])
+     xerror += xerr
+     yerr = abs(tt[1]-itt[1]*SZb-pt[1])
+     yerror += yerr
+     # print("  Mi="+str(Mi)+", Mj="+str(Mj))
+     # print("  abs(tx - ii*bsz-px)="+str(xerr))
+     # print("  abs(ty - jj*bsz-py)="+str(yerr))
 
      cnt += 1
 
+  print("  avg xerror = tx - ii*bsz-px = "+str(round(xerror/cnt,5)))
+  print("  avg yerror = ty - jj*bsz-py = "+str(round(yerror/cnt,5)))
   return [mat,SZb]
 # ------ move to discretize.py --------#
 
 # generates data frame slice of env objects
 # contained within a square around origin.
 # ARGS: origin (to center patch on), forest
-# RETURNS: tree patch, patch size (radius not
-#   number of trees)
+# RETURNS: tree patch, patch size (L/2 of
+# patch, not number of trees)
 def get_patch(orig,env):
-   patch_size = (int)(50*max(env.r)/2) + PAD
-   l = orig[0]-patch_size < env.x+env.r
-   r = env.x-env.r < orig[0]+patch_size
-   u = env.y-env.r < orig[1]+patch_size
-   d = orig[1]-patch_size < env.y+env.r
+   patch_size = (int)(50*max(env.r)/2) + PAD # floored
+   l = orig[0]-patch_size < env.x-env.r
+   r = env.x+env.r < orig[0]+patch_size
+   u = env.y+env.r < orig[1]+patch_size
+   d = orig[1]-patch_size < env.y-env.r
    patch = env[l & r & u & d]
    return [patch, patch_size]
 
