@@ -31,7 +31,8 @@ def generateKernel(ktype,size):
    ret = np.ones((size,size),dtype=int)
    # create vertical split
    if(ktype == 'vertical split'):
-      ret[ret.shape[0]/2] = -1
+      split_size = int(ret.shape[0] / 10)
+      ret[(ret.shape[0]/2)-split_size:(ret.shape[0]/2)+split_size+1] = -1
       ret = ret.T
 
    # otherwise return uniform
@@ -79,18 +80,20 @@ def walk(dm, td, ktype='uniform', display=False):
       procTime[2] += time.time() - start
       score_cnt += 1
    else:
-      print("(!) Either mask or kernel is not square")
+      print("(!) Walk: Either mask or kernel is not square")
 
    if(display):
       plot_mat(mask,bsize,"initial_mask.png")
 
    # process other points
-   for point in dm.values[1:5]:
+   for point in dm.values[1:100]:
+      cnt += 1
+      print("pt "+str(cnt)+" ("+str(round(point[0],3))+","+str(round(point[1],3))+"):",end='')
       # get scoring region, may contain trees
       start = time.time()
       [patch,sz] = get_patch(point,td)
       procTime[0] += time.time() - start
-
+      print("\t"+str(len(patch.values))+" ts")
       # discretize that shit
       start = time.time()
       [mask, bsize] = discretize(point,patch,sz,min(td.r))
@@ -109,15 +112,16 @@ def walk(dm, td, ktype='uniform', display=False):
          print("(!) Either mask or kernel is not square")
 
       if(display):
-         plot_mat(mask,bsize,"mask"+str(cnt)+".png")
+         plot_mat(mask,bsize,"./masks/mask"+str(cnt)+".png")
 
-      cnt += 1
 
+   print("===== SCORE =====")
    print("cummulative_score: "+str(cummulative_score))
    print("min_score: "+str(min_score))
    print("max_score: "+str(max_score))
-   print("get_patch avg PT(ms): "+str(round(procTime[0]/cnt,5)))
-   print("discretize avg PT(ms): "+str(round(procTime[1]/cnt,5)))
-   print("score_frame avg PT(ms): "+str(round(procTime[2]/cnt,5)))
+   print("==== CPU TIME ====")
+   print("get_patch avg PT(ms): "+str(round(1000*procTime[0]/cnt,5)))
+   print("discretize avg PT(ms): "+str(round(1000*procTime[1]/cnt,5)))
+   print("score_frame avg PT(ms): "+str(round(1000*procTime[2]/score_cnt,5)))
 
    return 0
