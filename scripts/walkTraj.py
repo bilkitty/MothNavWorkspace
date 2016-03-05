@@ -10,22 +10,6 @@ from plotStuff import plot_mat
 import time
 import sys
 
-# generate score for single traj point
-
-# args:
-# traj data
-# tree data
-
-# return:
-# n/a
-
-# steps:
-# loop though traj points
-# slice tree patch floor edges
-# pass that ish to score
-# record result as text and in plot
-# save plot and text
-
 # generate a kernel whose
 def generateKernel(ktype,size):
    ret = np.ones((size,size),dtype=int)
@@ -86,7 +70,7 @@ def walk(dm, td, ktype='uniform', display=False):
       plot_mat(mask,bsize,"initial_mask.png")
 
    # process other points
-   for point in dm.values[1:100]:
+   for point in dm.values[1:]:
       cnt += 1
       print("pt "+str(cnt)+" ("+str(round(point[0],3))+","+str(round(point[1],3))+"):",end='')
       # get scoring region, may contain trees
