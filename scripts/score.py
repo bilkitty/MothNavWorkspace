@@ -44,6 +44,16 @@ def map_to_mat_idx(tcenter,orig,bsize):
 
   return (ii,jj)
 
+def check_and_correct(val,vmin,vmax):
+  if(val < vmin):
+    return vmin
+  if(vmax < val):
+    return vmax
+  return val
+
+def is_mat_edge(idx,msize):
+  return (idx == 0) or (idx == msize - 1)
+
 # divide patch into min tree radius/2 sized
 # blocks and bin tree points into a matrix
 # MxM.
@@ -83,6 +93,8 @@ def discretize(pt,patch,sz,rmin):
 
   # init matrix that hold binary values
   mat = np.zeros((Nb,Nb),dtype=int)
+  min_idx = 0
+  max_idx = mat.shape[0]-1
 
   # show moth block bm(0,0)
   mat[int(Nb/2)][int(Nb/2)] = -1
@@ -94,32 +106,18 @@ def discretize(pt,patch,sz,rmin):
      Mi = int(Nb/2)+itt[0];
      Mj = int(Nb/2)+itt[1];
 
-     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
-       print("  tree:"+str(cnt))
-       print("  (!) Out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-       cnt += 1
-       continue
-
      # convert tree radius to nblocks
-     rr =  tt[2]*2**.5
-     rr /= 2
+     # rr =  tt[2]*(2**.5) # length from center to CORNER of sq = tradius
+     # rr /= 2
+     rr = tt[2] # length from center to SIDE of sq = tradius
      rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
 
      # set indices of mat[ti,tj] using mask
-     xmin = Mi - rb[0]
-     xmax = Mi + rb[0]
-     ymin = Mj - rb[0]
-     ymax = Mj + rb[0]
-
      # handle trees partially cuttoff
-     if(xmin < 0):
-       xmin = 0
-     if(mat.shape[0] <= xmax):
-       xmax = mat.shape[0]
-     if(ymin < 0):
-       ymin = 0
-     if(mat.shape[0] <= ymax):
-       ymax = mat.shape[0]
+     xmin = check_and_correct(Mi - rb[0], min_idx, max_idx)
+     xmax = check_and_correct(Mi + rb[0], min_idx, max_idx)
+     ymin = check_and_correct(Mj - rb[0], min_idx, max_idx)
+     ymax = check_and_correct(Mj + rb[0], min_idx, max_idx)
 
      # create mask of ones over center+root(2)/2
      xsize = xmax - xmin
@@ -131,7 +129,13 @@ def discretize(pt,patch,sz,rmin):
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
      # mark tree center (help see center of partically cuttoff tree)
-     mat[Mi][Mj] = -1*cnt
+     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
+       print("  tree:"+str(cnt))
+       print("  Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
+       print("  xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
+       print("  radius: "+str(rb[0]))
+     else:
+       mat[Mi][Mj] = -1*cnt
 
      # view error in reconstructing xy distance b/w tree and moth center
      xerr = abs(tt[0]-itt[0]*SZb-pt[0])
@@ -154,12 +158,18 @@ def discretize(pt,patch,sz,rmin):
 # ARGS: origin (to center patch on), forest
 # RETURNS: tree patch, patch size (L/2 of
 # patch, not number of trees)
-def get_patch(orig,env):
+def get_patch(orig,env,partial=True):
    patch_size = (int)(50*max(env.r)/2) + PAD # floored
-   l = orig[0]-patch_size < env.x-env.r
-   r = env.x+env.r < orig[0]+patch_size
-   u = env.y+env.r < orig[1]+patch_size
-   d = orig[1]-patch_size < env.y-env.r
+   if(not partial):
+     l = orig[0]-patch_size < env.x-env.r
+     r = env.x+env.r < orig[0]+patch_size
+     u = env.y+env.r < orig[1]+patch_size
+     d = orig[1]-patch_size < env.y-env.r
+   else:
+     l = orig[0]-patch_size < env.x+env.r
+     r = env.x-env.r < orig[0]+patch_size
+     u = env.y-env.r < orig[1]+patch_size
+     d = orig[1]-patch_size < env.y+env.r
    patch = env[l & r & u & d]
    return [patch, patch_size]
 
