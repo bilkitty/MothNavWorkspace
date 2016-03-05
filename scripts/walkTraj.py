@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+# ---------- move this to score.py ---------- #
+# ---------- call it scoreTraj.py
+
+
 import pandas as pd
 import numpy as np
 from score import get_patch \

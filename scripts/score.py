@@ -76,7 +76,6 @@ def discretize(pt,patch,sz,rmin):
     return None
   # get block size
   SZb = rmin/2
-  # print("  blocksize: "+str(SZb))
 
   # initialize matrix
   Nb = int(2*sz/SZb)
@@ -120,15 +119,15 @@ def discretize(pt,patch,sz,rmin):
      mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
      mask = mask.T
 
-     # apply mask over tree center
+     # apply mask over tree center (within boundaries of mat)
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
      # mark tree center (help see center of partically cuttoff tree)
      if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
        print("  tree:"+str(cnt))
-       print("  Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-       print("  xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
-       print("  radius: "+str(rb[0]))
+       print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
+       print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
+       print("    radius: "+str(rb[0]))
      else:
        mat[Mi][Mj] = -1*cnt
 
@@ -137,14 +136,11 @@ def discretize(pt,patch,sz,rmin):
      xerror += xerr
      yerr = abs(tt[1]-itt[1]*SZb-pt[1])
      yerror += yerr
-     # print("  Mi="+str(Mi)+", Mj="+str(Mj))
-     # print("  abs(tx - ii*bsz-px)="+str(xerr))
-     # print("  abs(ty - jj*bsz-py)="+str(yerr))
 
      cnt += 1
 
-  print("  avg xerror = tx - ii*bsz-px = "+str(round(xerror/cnt,5)))
-  print("  avg yerror = ty - jj*bsz-py = "+str(round(yerror/cnt,5)))
+  print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
+  print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
   return [mat,SZb]
 # ------ move to discretize.py --------#
 
