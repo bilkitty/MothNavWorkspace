@@ -44,14 +44,14 @@ def map_to_mat_idx(tcenter,orig,bsize):
 
   return (ii,jj)
 
-def check_and_correct(val,vmin,vmax):
+def keep_in_bounds(val,vmin,vmax):
   if(val < vmin):
     return vmin
   if(vmax < val):
     return vmax
   return val
 
-def is_mat_edge(idx,msize):
+def is_edge_idx(idx,msize):
   return (idx == 0) or (idx == msize - 1)
 
 # divide patch into min tree radius/2 sized
@@ -70,11 +70,6 @@ def discretize(pt,patch,sz,rmin):
   if(isinstance(patch,pd.DataFrame)
     or isinstance(patch,pd.Series)):
     patch = patch.values
-
-  # print("discretizing")
-  # print("  patch origin: "+str(pt))
-  # print("  patch contains: "+str(len(patch)))
-  # print("  patch size: "+str(sz))
 
   if(rmin < 0):
     print("(!) Negative rmin")
@@ -114,10 +109,10 @@ def discretize(pt,patch,sz,rmin):
 
      # set indices of mat[ti,tj] using mask
      # handle trees partially cuttoff
-     xmin = check_and_correct(Mi - rb[0], min_idx, max_idx)
-     xmax = check_and_correct(Mi + rb[0], min_idx, max_idx)
-     ymin = check_and_correct(Mj - rb[0], min_idx, max_idx)
-     ymax = check_and_correct(Mj + rb[0], min_idx, max_idx)
+     xmin = keep_in_bounds(Mi - rb[0], min_idx, max_idx)
+     xmax = keep_in_bounds(Mi + rb[0], min_idx, max_idx)
+     ymin = keep_in_bounds(Mj - rb[0], min_idx, max_idx)
+     ymax = keep_in_bounds(Mj + rb[0], min_idx, max_idx)
 
      # create mask of ones over center+root(2)/2
      xsize = xmax - xmin
@@ -180,7 +175,7 @@ def get_patch(orig,env,partial=True):
 # RETURNS: moth_point, tree_patch, patch_size(L/2)
 def setup_test(md,td,display=False):
    # get a single point
-   xypoint = md.loc[0] #(int)((len(md)-1)/2)] # midpoint
+   xypoint = md.loc[0]
    xy = xypoint[['pos_x','pos_y']]
    print("centering around point: ("+str(xy.pos_x)+","+str(xy.pos_y)+")")
 
