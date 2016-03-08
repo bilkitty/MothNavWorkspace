@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from loadYoyoData import load_data
-import walkTraj
+import score
 import time
 
 def main():
@@ -17,7 +17,7 @@ def main():
       printf("(!) ERROR: No data loaded.")
       return
 
-   walkTraj.walk(dmoth,dtree,display=True)
+   score.walk(dmoth,dtree,display=False)
    print("Total CPU Time (s): "+str(round(time.time() - start,5)))
    print("~~Done :)")
    return

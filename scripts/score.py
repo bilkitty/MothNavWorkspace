@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 
-from plotStuff import plot_frame
+from plotStuff import plot_frame, plot_mat
+from discretize import discretize
 import numpy as np
 import pandas as pd
+import time
 import sys
 
 PAD = 10  # pad patch for discritization
@@ -23,126 +25,6 @@ def score_frame(mask,kernel):
    # represent score as percent coverage if kernel is uniform ones
    ret = 1 - ret/mask.shape[0]/mask.shape[1]
    return ret
-
-# ------ move to discretize.py --------#
-# computes matrix indices as ith-block and
-# jth-block between tcenter and origin.
-def map_to_mat_idx(tcenter,orig,bsize):
-  # use np arrays
-  if(isinstance(orig,pd.Series)):
-    orig = orig.values
-
-  # get deltax, deltay of tree/moth
-  tx2px = tcenter[0] - orig[0]
-  ty2py = tcenter[1] - orig[1]
-  # get half blocks between mcenter and tcenter
-  ihalf = int( 2*tx2px/bsize ) # cols are x
-  jhalf = int( 2*ty2py/bsize ) # rows are y
-  # convert to index by combining halves
-  ii = ihalf if abs(ihalf) < 2 else int(ihalf/2)
-  jj = jhalf if abs(jhalf) < 2 else int(jhalf/2)
-
-  return (ii,jj)
-
-def keep_in_bounds(val,vmin,vmax):
-  if(val < vmin):
-    return vmin
-  if(vmax < val):
-    return vmax
-  return val
-
-def is_edge_idx(idx,msize):
-  return (idx == 0) or (idx == msize - 1)
-
-# divide patch into min tree radius/2 sized
-# blocks and bin tree points into a matrix
-# MxM.
-# ARGS: moth point, tree patch, patch size,
-#   min(tree radius)
-# RETURNS: matrix MxM, block size, where
-#   M = 2*patch/block size (odd)
-def discretize(pt,patch,sz,rmin):
-  xerror = 0
-  yerror = 0
-  # use np arrays
-  if(isinstance(pt,pd.Series)):
-    pt = pt.values
-  if(isinstance(patch,pd.DataFrame)
-    or isinstance(patch,pd.Series)):
-    patch = patch.values
-
-  if(rmin < 0):
-    print("(!) Negative rmin")
-    return None
-  # get block size
-  SZb = rmin/2
-
-  # initialize matrix
-  Nb = int(2*sz/SZb)
-  # make sure matrix is oddxodd and not ridiculously large
-  Nb += (Nb+1)%2
-  if(sys.maxsize < Nb):
-    print("(!) outrageous mat size, block size is too small")
-    return None
-
-  # init matrix that hold binary values
-  mat = np.zeros((Nb,Nb),dtype=int)
-  min_idx = 0
-  max_idx = mat.shape[0]-1
-
-  # show moth block bm(0,0)
-  mat[int(Nb/2)][int(Nb/2)] = -1
-
-  cnt = 1 #debug
-  for tt in patch:
-     # get tree center
-     itt = map_to_mat_idx(tt,pt,SZb)
-     Mi = int(Nb/2)+itt[0];
-     Mj = int(Nb/2)+itt[1];
-
-     # convert tree radius to nblocks
-     # rr =  tt[2]*(2**.5) # length from center to CORNER of sq = tradius
-     # rr /= 2
-     rr = tt[2] # length from center to SIDE of sq = tradius
-     rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
-
-     # set indices of mat[ti,tj] using mask
-     # handle trees partially cuttoff
-     xmin = keep_in_bounds(Mi - rb[0], min_idx, max_idx)
-     xmax = keep_in_bounds(Mi + rb[0], min_idx, max_idx)
-     ymin = keep_in_bounds(Mj - rb[0], min_idx, max_idx)
-     ymax = keep_in_bounds(Mj + rb[0], min_idx, max_idx)
-
-     # create mask of ones over center+root(2)/2
-     xsize = xmax - xmin
-     ysize = ymax - ymin
-     mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
-     mask = mask.T
-
-     # apply mask over tree center (within boundaries of mat)
-     mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
-
-     # mark tree center (help see center of partically cuttoff tree)
-     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
-       print("  tree:"+str(cnt))
-       print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-       print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
-       print("    radius: "+str(rb[0]))
-     else:
-       mat[Mi][Mj] = -1*cnt
-
-     # view error in reconstructing xy distance b/w tree and moth center
-     xerr = abs(tt[0]-itt[0]*SZb-pt[0])
-     xerror += xerr
-     yerr = abs(tt[1]-itt[1]*SZb-pt[1])
-     yerror += yerr
-
-     cnt += 1
-
-  print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
-  print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
-  return [mat,SZb]
-# ------ move to discretize.py --------#
 
 # generates data frame slice of env objects
 # contained within a square around origin.
@@ -184,3 +66,103 @@ def setup_test(md,td,display=False):
       plot_frame(xypoint,patch,patch_size,td)
 
    return [xy,patch,patch_size]
+
+# generate a kernel whose
+def generateKernel(ktype,size):
+   ret = np.ones((size,size),dtype=int)
+   # create vertical split
+   if(ktype == 'vertical split'):
+      split_size = int(ret.shape[0] / 10)
+      ret[(ret.shape[0]/2)-split_size:(ret.shape[0]/2)+split_size+1] = -1
+      ret = ret.T
+
+   # otherwise return uniform
+   return ret
+
+# think about keeping data frames as is for simplicity
+def walk(dm, td, ktype='uniform', display=False):
+   cummulative_score = 0
+   min_score = sys.maxsize
+   max_score = -sys.maxsize - 1
+   # get moth xy data from data frame
+   dm = dm[['pos_x','pos_y']]
+   # make sure there are data in moth data frame
+   if(len(dm.values) == 0 or len(dm.values[0]) != 2):
+      print("(!) Cannot process traj data of size:"+str(len(dm.values))\
+         +" & len:"+str(len(dm.values[0])))
+      return 1
+   if(len(td.values) == 0 or len(td.values[0]) != 3):
+      print("(!) Cannot process tree data of size:"+str(len(td.values))\
+         +" & len:"+str(len(td.values[0])))
+      return 1
+
+   # measure processing times
+   # 0 = get_patch, 1 = discritize, 2 = score_frame
+   procTime = [0.,0.,0.]
+   cnt = 1
+   score_cnt = 0
+   # get mask of first point
+   start = time.time()
+   [patch,sz] = get_patch(dm.loc[0],td)
+   procTime[0] += time.time() - start
+
+   start = time.time()
+   [mask, bsize] = discretize(dm.loc[0],patch,sz,min(td.r))
+   procTime[1] += time.time() - start
+   # initialize kernel
+   kernel = generateKernel(ktype,mask.shape[0])
+   # initialize score
+   if(is_square_mat(mask) and is_square_mat(kernel)):
+      start = time.time()
+      score = score_frame(mask,kernel)
+      if(score < min_score): min_score = score
+      if(max_score < score): max_score = score
+      cummulative_score += score
+      procTime[2] += time.time() - start
+      score_cnt += 1
+   else:
+      print("(!) Walk: Either mask or kernel is not square")
+
+   if(display):
+      plot_mat(mask,bsize,"initial_mask.png")
+
+   # process other points
+   for point in dm.values[1:10]:
+      cnt += 1
+      print("pt "+str(cnt)+" ("+str(round(point[0],3))+","+str(round(point[1],3))+"):",end='')
+      # get scoring region, may contain trees
+      start = time.time()
+      [patch,sz] = get_patch(point,td)
+      procTime[0] += time.time() - start
+      print("\t"+str(len(patch.values))+" ts")
+      # discretize that shit
+      start = time.time()
+      [mask, bsize] = discretize(point,patch,sz,min(td.r))
+      procTime[1] += time.time() - start
+
+      # update score
+      if(is_square_mat(mask) and is_square_mat(kernel)):
+         start = time.time()
+         score = score_frame(mask,kernel)
+         if(score < min_score): min_score = score
+         if(max_score < score): max_score = score
+         cummulative_score += score
+         procTime[2] += time.time() - start
+         score_cnt += 1
+      else:
+         print("(!) Either mask or kernel is not square")
+
+      if(display):
+         plot_mat(mask,bsize,"./masks/mask"+str(cnt)+".png")
+
+
+   print("===== SCORE =====")
+   print("cummulative_score: "+str(cummulative_score))
+   print("min_score: "+str(min_score))
+   print("max_score: "+str(max_score))
+   print("==== CPU TIME ====")
+   print("get_patch avg PT(ms): "+str(round(1000*procTime[0]/cnt,5)))
+   print("discretize avg PT(ms): "+str(round(1000*procTime[1]/cnt,5)))
+   print("score_frame avg PT(ms): "+str(round(1000*procTime[2]/score_cnt,5)))
+
+   return 0
