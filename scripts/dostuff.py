@@ -7,8 +7,8 @@ import time
 def main():
    start = time.time()
    # read moth and tree data
-   dtree = load_data("csv","../data/test/forest.csv")
-   dmoth = load_data("csv","../data/test/moth6_single.csv")    # check for loaded files
+   dtree = load_data("csv","../data/test/csv/forest.csv")
+   dmoth = load_data("csv","../data/test/csv/moth6_single.csv")    # check for loaded files
    print( "Processing points: "+str(len(dmoth.values)) )
    print( "Forest size: "+str(len(dtree.values)) )
 
@@ -17,7 +17,7 @@ def main():
       printf("(!) ERROR: No data loaded.")
       return
 
-   walkTraj.walk(dmoth,dtree,display=False)
+   walkTraj.walk(dmoth,dtree,display=True)
    print("Total CPU Time (s): "+str(round(time.time() - start,5)))
    print("~~Done :)")
    return
