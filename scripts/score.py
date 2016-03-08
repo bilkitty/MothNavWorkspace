@@ -4,7 +4,6 @@ from plotStuff import plot_frame, plot_mat
 from discretize import discretize
 import numpy as np
 import pandas as pd
-import time
 import sys
 
 PAD = 10  # pad patch for discritization
@@ -46,27 +45,6 @@ def get_patch(orig,env,partial=True):
    patch = env[l & r & u & d]
    return [patch, patch_size]
 
-# sets up tree patch centered on single point
-# from moth traj and tree data.
-# Also provides visualization of patch by default.
-# ARGS: moth_traj, tree_data, bool (opt)
-# RETURNS: moth_point, tree_patch, patch_size(L/2)
-def setup_test(md,td,display=False):
-   # get a single point
-   xypoint = md.loc[0]
-   xy = xypoint[['pos_x','pos_y']]
-   print("centering around point: ("+str(xy.pos_x)+","+str(xy.pos_y)+")")
-
-   # get patch centered on moth point
-   # size is L/2 for patch LxL
-   [patch,patch_size] = get_patch(xy,td)
-
-   # visualize patch
-   if(display):
-      plot_frame(xypoint,patch,patch_size,td)
-
-   return [xy,patch,patch_size]
-
 # generate a kernel whose
 def generateKernel(ktype,size):
    ret = np.ones((size,size),dtype=int)
@@ -96,30 +74,19 @@ def walk(dm, td, ktype='uniform', display=False):
          +" & len:"+str(len(td.values[0])))
       return 1
 
-   # measure processing times
-   # 0 = get_patch, 1 = discritize, 2 = score_frame
-   procTime = [0.,0.,0.]
    cnt = 1
-   score_cnt = 0
    # get mask of first point
-   start = time.time()
    [patch,sz] = get_patch(dm.loc[0],td)
-   procTime[0] += time.time() - start
 
-   start = time.time()
    [mask, bsize] = discretize(dm.loc[0],patch,sz,min(td.r))
-   procTime[1] += time.time() - start
    # initialize kernel
    kernel = generateKernel(ktype,mask.shape[0])
    # initialize score
    if(is_square_mat(mask) and is_square_mat(kernel)):
-      start = time.time()
       score = score_frame(mask,kernel)
       if(score < min_score): min_score = score
       if(max_score < score): max_score = score
       cummulative_score += score
-      procTime[2] += time.time() - start
-      score_cnt += 1
    else:
       print("(!) Walk: Either mask or kernel is not square")
 
@@ -131,24 +98,17 @@ def walk(dm, td, ktype='uniform', display=False):
       cnt += 1
       print("pt "+str(cnt)+" ("+str(round(point[0],3))+","+str(round(point[1],3))+"):",end='')
       # get scoring region, may contain trees
-      start = time.time()
       [patch,sz] = get_patch(point,td)
-      procTime[0] += time.time() - start
       print("\t"+str(len(patch.values))+" ts")
       # discretize that shit
-      start = time.time()
       [mask, bsize] = discretize(point,patch,sz,min(td.r))
-      procTime[1] += time.time() - start
 
       # update score
       if(is_square_mat(mask) and is_square_mat(kernel)):
-         start = time.time()
          score = score_frame(mask,kernel)
          if(score < min_score): min_score = score
          if(max_score < score): max_score = score
          cummulative_score += score
-         procTime[2] += time.time() - start
-         score_cnt += 1
       else:
          print("(!) Either mask or kernel is not square")
 
@@ -160,9 +120,5 @@ def walk(dm, td, ktype='uniform', display=False):
    print("cummulative_score: "+str(cummulative_score))
    print("min_score: "+str(min_score))
    print("max_score: "+str(max_score))
-   print("==== CPU TIME ====")
-   print("get_patch avg PT(ms): "+str(round(1000*procTime[0]/cnt,5)))
-   print("discretize avg PT(ms): "+str(round(1000*procTime[1]/cnt,5)))
-   print("score_frame avg PT(ms): "+str(round(1000*procTime[2]/score_cnt,5)))
 
    return 0
