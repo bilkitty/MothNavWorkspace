@@ -1,0 +1,41 @@
+summary:
+
+
+report:
+   background
+      use an example:
+      what are some navigational challenges in robotics?
+      how are bio systems good at solving these challenges?
+      how can we study these systems? yoyo's experiments
+      how can these studies inform us on how to solve these challenges in robotics?
+
+   problem addressed/ question
+      In crowded environments, what visual cues contribute to an animal's navigational decision-making?
+
+      How can we capture, or even predict, an animal's intent based on recorded behavior when it is navigating a crowded environment?
+
+   analysis/design
+      use a function to map a trajectory/environment to a quantity (score)
+      which can be compared to other trajectory/envs
+      the function is a kernel determined by visual chars hypothetically observed by the animal (i.e. distance, relative heading, optic flow, etc)
+      the kernel is applied over a subset of the environment that is centered around each point of the traj
+      the result of this operation is accumulated along the traj path as the score
+
+   implementation
+      python numpy and pandas modules were used to store and manipulate traj/env data
+      how was data loaded
+      how was a frame obtained
+      how was that frame discretized
+      how was the kernel genereated
+      inner prod kernel and frame
+      visualisation/debugging
+
+   results
+
+   future work
+      genetic search for best function
+      for a set of functions:
+      generate scores for artificial set and data set
+      compare the distribution of artificial traj/envs to traj/envs to determine how well the function distinguishes the two categories
+      generate new functions from top k funcs and repeat
+
