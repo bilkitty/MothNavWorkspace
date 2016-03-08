@@ -30,9 +30,6 @@ def keep_in_bounds(val,vmin,vmax):
     return vmax
   return val
 
-def is_edge_idx(idx,msize):
-  return (idx == 0) or (idx == msize - 1)
-
 # divide patch into min tree radius/2 sized
 # blocks and bin tree points into a matrix
 # MxM.
@@ -41,8 +38,6 @@ def is_edge_idx(idx,msize):
 # RETURNS: matrix MxM, block size, where
 #   M = 2*patch/block size (odd)
 def discretize(pt,patch,sz,rmin):
-  xerror = 0
-  yerror = 0
   # use np arrays
   if(isinstance(pt,pd.Series)):
     pt = pt.values
@@ -80,8 +75,6 @@ def discretize(pt,patch,sz,rmin):
      Mj = int(Nb/2)+itt[1];
 
      # convert tree radius to nblocks
-     # rr =  tt[2]*(2**.5) # length from center to CORNER of sq = tradius
-     # rr /= 2
      rr = tt[2] # length from center to SIDE of sq = tradius
      rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
 
@@ -102,22 +95,7 @@ def discretize(pt,patch,sz,rmin):
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
      # mark tree center (help see center of partically cuttoff tree)
-     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
-       print("  tree:"+str(cnt))
-       print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-       print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
-       print("    radius: "+str(rb[0]))
-     else:
-       mat[Mi][Mj] = -1*cnt
+     if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
+       mat[Mi][Mj] = -1
 
-     # view error in reconstructing xy distance b/w tree and moth center
-     xerr = abs(tt[0]-itt[0]*SZb-pt[0])
-     xerror += xerr
-     yerr = abs(tt[1]-itt[1]*SZb-pt[1])
-     yerror += yerr
-
-     cnt += 1
-
-  print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
-  print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
   return [mat,SZb]
