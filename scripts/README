@@ -1,4 +1,4 @@
-This package load environment and single trajectory then calculates a score that is proportional to the density of trees around each point of the trajectory.
+This package load environment and single trajectory then calculates a score that is proportional to 1 minus the density of trees around each point of the trajectory.
 
 The main module can open either csv or hdf files. Since the traj and env data are loaded as Pandas DataFrames, the x,y columns in traj are expected to be called "pos_x" and "pos_y". For env data, the columns should be labeled ['x','y','r'].
 
