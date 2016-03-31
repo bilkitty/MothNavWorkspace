@@ -7,7 +7,6 @@ import pandas as pd
 import time
 import sys
 
-PAD = 10  # pad patch for discritization
 MASK_FILEPATH = "./discretized/"
 
 def is_square_mat(mat):

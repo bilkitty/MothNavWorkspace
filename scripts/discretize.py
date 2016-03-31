@@ -3,6 +3,41 @@
 import numpy as np
 import pandas as pd
 import sys
+from scipy.sparse import bsr_matrix
+
+PAD = 10  # pad patch for discritization
+
+# append mat to preexisting ndarray with dtype object
+# trust client to maintain proper order
+# do we need to specify block size (R,C) what is that??
+def pack(mat,ii,l):
+  sparse_mat = bsr_matrix(mat).tobsr()
+  if (isinstance(l,np.ndarray) and l.dtype == 'O'):
+    l[min(max(ii,0),len(l))] = sparse_mat
+  else:
+    print("(!) Error pack(): second arg must be an ndarray")
+
+  return
+
+# generates data frame slice of env objects
+# contained within a square around origin.
+# ARGS: origin (to center patch on), forest
+# RETURNS: tree patch, patch size (L/2 of
+# patch, not number of trees)
+def get_patch(orig,env,partial=True):
+   patch_size = (int)(50*max(env.r)/2) + PAD # floored
+   if(not partial):
+     l = orig[0]-patch_size < env.x-env.r
+     r = env.x+env.r < orig[0]+patch_size
+     u = env.y+env.r < orig[1]+patch_size
+     d = orig[1]-patch_size < env.y-env.r
+   else:
+     l = orig[0]-patch_size < env.x+env.r
+     r = env.x-env.r < orig[0]+patch_size
+     u = env.y-env.r < orig[1]+patch_size
+     d = orig[1]-patch_size < env.y+env.r
+   patch = env[l & r & u & d]
+   return [patch, patch_size]
 
 # computes matrix indices as ith-block and
 # jth-block between tcenter and origin.
@@ -66,6 +101,7 @@ def discretize(pt,patch,sz,rmin):
 
   # init matrix that hold binary values
   mat = np.zeros((Nb,Nb),dtype=int)
+
   min_idx = 0
   max_idx = mat.shape[0]-1
 
@@ -87,6 +123,7 @@ def discretize(pt,patch,sz,rmin):
 
      # set indices of mat[ti,tj] using mask
      # handle trees partially cuttoff
+     # use pad around patch to avoid doing this check on center/patch boundaries
      xmin = keep_in_bounds(Mi - rb[0], min_idx, max_idx)
      xmax = keep_in_bounds(Mi + rb[0], min_idx, max_idx)
      ymin = keep_in_bounds(Mj - rb[0], min_idx, max_idx)
@@ -95,7 +132,8 @@ def discretize(pt,patch,sz,rmin):
      # create mask of ones over center+root(2)/2
      xsize = xmax - xmin
      ysize = ymax - ymin
-     mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
+     # mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
+     mask = np.ones((xsize+1,ysize+1),dtype=int)
      mask = mask.T
 
      # apply mask over tree center (within boundaries of mat)
@@ -108,7 +146,7 @@ def discretize(pt,patch,sz,rmin):
        print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
        print("    radius: "+str(rb[0]))
      else:
-       mat[Mi][Mj] = -1*cnt
+       mat[Mi][Mj] = -1#*cnt
 
      # view error in reconstructing xy distance b/w tree and moth center
      xerr = abs(tt[0]-itt[0]*SZb-pt[0])
