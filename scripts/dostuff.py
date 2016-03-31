@@ -3,6 +3,8 @@
 import numpy as np
 from loadYoyoData import load_data
 import discretize
+import pickle
+import os
 
 def main():
    # read tree data
@@ -24,9 +26,16 @@ def main():
    # for each trajectory:
    # init np that can contain mats (i.e., dtype = object)
    trial = np.zeros(len(dmoth.values),dtype=object)
+   # init filepath for dumping pickle files
+   filepath = '../data/trajs/'+dmoth.moth_id[0]
+   if not os.path.exists(filepath):
+     os.makedirs(filepath)
 
-   # get xy data
+   # get xy data and conditions description
    traj = dmoth[['pos_x','pos_y']]
+   desc = str(int(dmoth.flight_speed[0]))+'_'+\
+      str(int(dmoth.fog_min[0]))+'_'+\
+      str(int(dmoth.fog_max[0]))
 
    cnt = 0
    # process other points
@@ -42,7 +51,11 @@ def main():
 
       cnt += 1
 
-   trial_hash['t0'] = trial
+   trial_hash['t0'+dmoth.datetime[0]] = trial
+
+
+   with open(filepath+'/'+desc+'.pickle', 'wb') as handle:
+     pickle.dump(trial_hash, handle)
 
    print("trials: "+str(len(trial_hash)))
    print("trial pts: "+str(len(trial)))
@@ -53,14 +66,4 @@ def main():
 
 main()
 
-# import pickle
 
-# a = {'hello': 'world'}
-
-# with open('filename.pickle', 'wb') as handle:
-#   pickle.dump(a, handle)
-
-# with open('filename.pickle', 'rb') as handle:
-#   b = pickle.load(handle)
-
-# print a == b

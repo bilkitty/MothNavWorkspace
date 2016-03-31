@@ -104,6 +104,8 @@ def walk(dm, td, ktype='uniform', display=False):
 
    # load discretized frames for each trajectory
    # from pickled dict
+   # with open('filename.pickle', 'rb') as handle:
+   #   b = pickle.load(handle)
    loaded_frames = [np.ones((size,size),dtype=int)]
    size = 1
    mask = loaded_frames[0]
