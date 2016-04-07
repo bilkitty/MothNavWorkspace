@@ -6,7 +6,7 @@ from loadYoyoData import load_data
 from extractTrajs import get_trajs
 
 DATA_FROM_USB = "/media/usb/Input/moth_data.h5"
-MOTHS = ['moth7']#,'moth6','moth9']
+MOTHS = ['moth7','moth6','moth9']
 # ,'moth1','moth2','moth8'
 # ,'moth4','moth5','moth12'
 # ,'moth10','moth3','moth11'

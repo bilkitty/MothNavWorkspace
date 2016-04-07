@@ -140,12 +140,15 @@ def discretize(pt,patch,sz,rmin):
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
      # mark tree center (help see center of partically cuttoff tree)
-     if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
-       print("  tree:"+str(cnt))
-       print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-       print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
-       print("    radius: "+str(rb[0]))
-     else:
+     # if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
+     #   print("  tree:"+str(cnt))
+     #   print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
+     #   print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
+     #   print("    radius: "+str(rb[0]))
+     # else:
+     #   mat[Mi][Mj] = -1#*cnt
+
+     if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
        mat[Mi][Mj] = -1#*cnt
 
      # view error in reconstructing xy distance b/w tree and moth center
@@ -156,6 +159,6 @@ def discretize(pt,patch,sz,rmin):
 
      cnt += 1
 
-  print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
-  print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
+  # print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
+  # print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
   return [mat,SZb]
