@@ -9,11 +9,11 @@ PAD = 10  # pad patch for discritization
 
 # append mat to preexisting ndarray with dtype object
 # trust client to maintain proper order
-# do we need to specify block size (R,C) what is that??
 def pack(mat,ii,l):
   sparse_mat = bsr_matrix(mat).tobsr()
   if (isinstance(l,np.ndarray) and l.dtype == 'O'):
-    l[min(max(ii,0),len(l))] = sparse_mat
+    bounded_index = min(max(ii,0),len(l))
+    l[bounded_index] = sparse_mat
   else:
     print("(!) Error pack(): second arg must be an ndarray")
 
@@ -139,15 +139,6 @@ def discretize(pt,patch,sz,rmin):
      # apply mask over tree center (within boundaries of mat)
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
-     # mark tree center (help see center of partically cuttoff tree)
-     # if(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj):
-     #   print("  tree:"+str(cnt))
-     #   print("    Center out of bounds: (Mi,Mj)=("+str(Mi)+","+str(Mj)+")")
-     #   print("    xmin,xmax:"+str(xmin)+","+str(xmax)+" ymin,ymax:"+str(ymin)+","+str(ymax))
-     #   print("    radius: "+str(rb[0]))
-     # else:
-     #   mat[Mi][Mj] = -1#*cnt
-
      if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
        mat[Mi][Mj] = -1#*cnt
 
@@ -159,6 +150,4 @@ def discretize(pt,patch,sz,rmin):
 
      cnt += 1
 
-  # print("  avg xerror = avg(tx - ii*bsz-px) = "+str(round(xerror/cnt,5)))
-  # print("  avg yerror = avg(ty - jj*bsz-py) = "+str(round(yerror/cnt,5)))
   return [mat,SZb]
