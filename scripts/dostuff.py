@@ -7,7 +7,13 @@ import pickle
 import glob
 import os
 
-def processTrial(trial_hash,dtree,traj,name,dt):
+# ARGS: dict of trials, forest data, traj data, trial name, date time
+# RETURNS: N/A
+# generates discretized patches of trees from forest data for each
+# point in traj data. These masks are stored in a list. Later, this
+# list and mask block size are saved to a dict using trial name
+# and datetime as a key.
+def processTrial(trial_hash,dtree,traj,tn,dt):
    pt_cnt = 0
    bsize = 0
    # init np that can contain mats (i.e., dtype = object)
@@ -23,13 +29,13 @@ def processTrial(trial_hash,dtree,traj,name,dt):
       if (0 < bsize_temp):
          discretize.pack(mask,pt_cnt,trial)
       else:
-         print("(!) processTrial: failed to compute mask for "+name+"["+str(cnt)+"]")
+         print("(!) processTrial: failed to compute mask for "+tn+"["+str(pt_cnt)+"]")
 
       pt_cnt += 1
 
-   trial_hash[name+'_'+str(dt)] = [trial,bsize]
+   trial_hash[tn+'_'+str(dt)] = [trial,bsize]
 
-   print(name)
+   print(tn)
    print("len: "+str(len(trial)))
 
    return
@@ -71,57 +77,53 @@ def main():
       LOG = open(DATA_LOC+"trial_log",'wb')
 
    # load the first file in data dir (assume files are sorted)
-   new_trial_set = True
-   cnt = 0
+   trial_cnt = 0
 
    mothname = ""
    filepath,desc = "",""
    for st in single_trials:
       # load trial
-      dmoth = load_data("h5",st)    # check for loaded files
-      print( "Processing points: "+str(len(dmoth.values)) )
-      # log trial
-      if (cnt == 0):
-         writeTo(LOG,str(dmoth.moth_id.iloc[0])+":")
-      writeTo(LOG,"\tt"+str(cnt)+" = "+str(len(dmoth.values)))
-
+      raw_data = load_data("h5",st)    # check for loaded files
+      print( "Processing points: "+str(len(raw_data.values)) )
       # check that moth data is not empty
-      if(len(dmoth) == 0):
+      if(len(raw_data) == 0):
          print("(!) ERROR: No moth data loaded for "+st)
          continue
 
-      # save trial set as pickle file
-      if (new_trial_set):
-         new_trial_set = False
-      else:
-         # processing a new moth
-         if (mothname != dmoth.moth_id.iloc[0]):
-            print(mothname+": saving "+cnt+" trajs in "+filepath+'/'+desc+".pickle")
-            # save old trial hash in mothid dir
-            with open(filepath+'/'+desc+'.pickle', 'wb') as handle:
-              pickle.dump(trial_hash, handle)
-            # start new trial set
-            new_trial_set = True
-            # reset count
-            cnt = 0
-            # reset dictionary
-            trial_hash = {}
+      new_moth = raw_data.moth_id.iloc[0]
 
-      mothname = dmoth.moth_id.iloc[0]
+      # processing a new moth save prev moth - skips first trial
+      if (mothname != "" and mothname != new_moth):
+         print(mothname+": saving "+str(trial_cnt)+" trajs in "+filepath+'/'+desc+".pickle")
+         with open(filepath+'/'+desc+'.pickle', 'wb') as handle:
+           pickle.dump(trial_hash, handle)
+         # reset count
+         trial_cnt = 0
+         # reset dictionary
+         trial_hash = {}
+
+      # log trial
+      if (trial_cnt == 0):
+         writeTo(LOG,str(new_moth)+":")
+      writeTo(LOG,"\tt"+str(trial_cnt)+" = "+str(len(raw_data.values)))
+
+      mothname = new_moth
+
       # init filepath for dumping pickle files
       filepath = DATA_LOC+mothname
       if not os.path.exists(filepath):
         os.makedirs(filepath)
       # get xy data and conditions description
-      traj = dmoth[['pos_x','pos_y']]
-      desc = str(int(dmoth.flight_speed.iloc[0]))+'_'+\
-         str(int(dmoth.fog_min.iloc[0]))+'_'+\
-         str(int(dmoth.fog_max.iloc[0]))
+      traj = raw_data[['pos_x','pos_y']]
+      desc = str(int(raw_data.flight_speed.iloc[0]))+'_'+\
+         str(int(raw_data.fog_min.iloc[0]))+'_'+\
+         str(int(raw_data.fog_max.iloc[0]))
 
-      processTrial(trial_hash,dtree,traj,'t'+str(cnt),dmoth.datetime.iloc[0])
+      processTrial(trial_hash,dtree,traj,'t'+str(trial_cnt),raw_data.datetime.iloc[0])
 
       # update trial count
-      cnt += 1
+      trial_cnt += 1
+
 
    # save the last trial_hash
    with open(filepath+'/'+desc+'.pickle', 'wb') as handle:
