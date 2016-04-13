@@ -8,26 +8,29 @@ import glob
 import os
 
 def processTrial(trial_hash,dtree,traj,name,dt):
-   cnt = 0
+   pt_cnt = 0
+   bsize = 0
    # init np that can contain mats (i.e., dtype = object)
    trial = np.zeros(len(traj.values),dtype=object)
    # process other points
    for point in traj.values:
       # get scoring region, may contain trees
       [patch,sz] = discretize.get_patch(point,dtree)
-      # print("\t"+str(len(patch.values))+" ts")
       # discretize that shit
-      [mask, bsize] = discretize.discretize(point,patch,sz,min(dtree.r))
-      # save mask
-      discretize.pack(mask,cnt,trial)
+      [mask, bsize_temp] = discretize.discretize(point,patch,sz,min(dtree.r))
+      bsize = max(bsize_temp,bsize)
+      # save mask, trial count, and block size
+      if (0 < bsize_temp):
+         discretize.pack(mask,pt_cnt,trial)
+      else:
+         print("(!) processTrial: failed to compute mask for "+name+"["+str(cnt)+"]")
 
-      cnt += 1
+      pt_cnt += 1
 
-   trial_hash[name+'_'+str(dt)] = trial
+   trial_hash[name+'_'+str(dt)] = [trial,bsize]
 
-   print("trial #"+str(len(trial_hash)))
-   print("trial pts: "+str(len(trial)))
-   print("filled: "+str(cnt))
+   print(name)
+   print("len: "+str(len(trial)))
 
    return
 
@@ -49,11 +52,17 @@ def main():
       return
 
    # initialize dictionary
+   # key = tN, val = [trial,block_size]
    trial_hash = {}
 
    # files to process
    single_trials = glob.glob("/home/bilkit/Dropbox/moth_nav_analysis/data/single_trials/*.h5")
+   if (len(single_trials) < 1):
+      print("No trials to process.\n~~Done.")
+      return
    single_trials.sort()
+   print("Computing masks for:")
+   for t in single_trials: print('\t'+t+'\n')
 
    # log processed trials in Notes file
    if (os.path.exists(DATA_LOC+"trial_log")):
