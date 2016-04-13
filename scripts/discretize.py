@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 from scipy.sparse import bsr_matrix
 
-PAD = 10  # pad patch for discritization
+PAD = 0  # pad patch for discritization
 
 # append mat to preexisting ndarray with dtype object
 # trust client to maintain proper order
@@ -25,7 +25,7 @@ def pack(mat,ii,l):
 # RETURNS: tree patch, patch size (L/2 of
 # patch, not number of trees)
 def get_patch(orig,env,partial=True):
-   patch_size = (int)(50*max(env.r)/2) + PAD # floored
+   patch_size = (int)(20*max(env.r)/2) + PAD # floored
    if(not partial):
      l = orig[0]-patch_size < env.x-env.r
      r = env.x+env.r < orig[0]+patch_size
@@ -42,6 +42,11 @@ def get_patch(orig,env,partial=True):
 # computes matrix indices as ith-block and
 # jth-block between tcenter and origin.
 def map_to_mat_idx(tcenter,orig,bsize):
+  # avoid divide by zero or neg
+  if (bsize <= 0):
+    print("(!) map_to_mat_idx: invalid bsize "+str(bsize))
+    return (float('NaN'),float('NaN'))
+
   # use np arrays
   if(isinstance(orig,pd.Series)):
     orig = orig.values
@@ -75,6 +80,7 @@ def is_edge_idx(idx,msize):
 #   min(tree radius)
 # RETURNS: matrix MxM, block size, where
 #   M = 2*patch/block size (odd)
+#   returns block size = -1 if error
 def discretize(pt,patch,sz,rmin):
   xerror = 0
   yerror = 0
@@ -87,7 +93,7 @@ def discretize(pt,patch,sz,rmin):
 
   if(rmin < 0):
     print("(!) Negative rmin")
-    return None
+    return [None,-1]
   # get block size
   SZb = rmin/2
 
@@ -97,7 +103,7 @@ def discretize(pt,patch,sz,rmin):
   Nb += (Nb+1)%2
   if(sys.maxsize < Nb):
     print("(!) outrageous mat size, block size is too small")
-    return None
+    return [None,-1]
 
   # init matrix that hold binary values
   mat = np.zeros((Nb,Nb),dtype=int)
@@ -110,6 +116,7 @@ def discretize(pt,patch,sz,rmin):
 
   cnt = 1 #debug
   for tt in patch:
+     # block size should be non-zero
      # get tree center
      itt = map_to_mat_idx(tt,pt,SZb)
      Mi = int(Nb/2)+itt[0];
