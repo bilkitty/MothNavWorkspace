@@ -142,12 +142,6 @@ def discretize(pt,patch,sz,rmin):
      if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
        mat[Mi][Mj] = -1#*cnt
 
-     # view error in reconstructing xy distance b/w tree and moth center
-     xerr = abs(tt[0]-itt[0]*SZb-pt[0])
-     xerror += xerr
-     yerr = abs(tt[1]-itt[1]*SZb-pt[1])
-     yerror += yerr
-
      cnt += 1
 
   return [mat,SZb]
