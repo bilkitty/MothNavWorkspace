@@ -139,15 +139,15 @@ def discretize(pt,patch,sz,rmin):
      # create mask of ones over center+root(2)/2
      xsize = xmax - xmin
      ysize = ymax - ymin
-     # mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
      mask = np.ones((xsize+1,ysize+1),dtype=int)
      mask = mask.T
 
      # apply mask over tree center (within boundaries of mat)
      mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
 
+     # mark tree center with -1
      if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
-       mat[Mi][Mj] = -1#*cnt
+       mat[Mi][Mj] = -1
 
      cnt += 1
 
