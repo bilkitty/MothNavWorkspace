@@ -7,16 +7,17 @@ from scipy.sparse import bsr_matrix
 
 PAD = 0  # pad patch for discritization
 
-# append mat to preexisting ndarray with dtype object
-# trust client to maintain proper order
-def pack(mat,ii,l):
+# inserts mat and point data to numpy array
+# so that it can be processed independently from
+# raw trajectory data.
+# if requested index is out of bounds, then the
+# boundary indices are overwritten.
+def pack(mat,data,ii,l):
+  if (ii < 0 or len(l) <= ii):
+    print("pack: warn: overwritting list data")
+  bounded_index = min(max(ii,0),len(l))
   sparse_mat = bsr_matrix(mat).tobsr()
-  if (isinstance(l,np.ndarray) and l.dtype == 'O'):
-    bounded_index = min(max(ii,0),len(l))
-    l[bounded_index] = sparse_mat
-  else:
-    print("(!) Error pack(): second arg must be an ndarray")
-
+  l[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
   return
 
 # generates data frame slice of env objects
