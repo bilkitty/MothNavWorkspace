@@ -10,7 +10,7 @@ import os
 
 
 def main():
-   kernel_types = ['uniform','vertical_split','gaussian','heading']
+   kernel_types = ['uniform','gaussian','rotated']
    pickle_file = "/home/bilkit/Dropbox/moth_nav_analysis/data/masks/moth1/4_4_8.pickle"
    output_file = "/home/bilkit/Dropbox/moth_nav_analysis/scripts/masks"
 
@@ -32,10 +32,30 @@ def main():
    trial.sort() # get trials chronologically for reproducability
 
    output_file += '/'+moth_id
-   kt = kernel_types[1]
-   for tcnt in range(0,len(trial)):
-      scores = score_trial(pdata[trial[tcnt]],tcnt,description,ktype=kt)
-      plot_scores(scores,moth_id,tcnt,output_file+"_t"+str(tcnt)+"_"+kt+"_scores.png")
+   scores = []
+   tcnt = 1
+   # kt = kernel_types[3]
+   for kt in kernel_types:
+      scores.append( score_trial(pdata[trial[tcnt]],tcnt,description,ktype=kt,display=False) )
+      # plot_scores(scores,moth_id,tcnt,output_file+"_t"+str(tcnt)+"_"+kt+"_scores.png")
+
+   # compare different scores
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   plt.plot(np.arange(len(scores[0])),scores[0],label="uniform",color='y')
+   plt.plot(np.arange(len(scores[1])),scores[1],label="gaussian",color='r')
+   plt.plot(np.arange(len(scores[2])),scores[2],label="rotated",color='b')
+   plt.title("scores for "+moth_id+" t"+str(tcnt))
+   plt.legend()
+   plt.xlabel("trajectory frame")
+   plt.xlim(-1,len(scores[0])+1)
+   plt.ylabel("score")
+   smin = [min(scores[0]),min(scores[1]),min(scores[2])]
+   smax = [max(scores[0]),max(scores[1]),max(scores[2])]
+   pad = 0.1*(max(smax) - min(smin))
+   plt.ylim(min(smin)-pad,max(smax)+pad+1)
+   plt.show()
 
    handle.close()
 
