@@ -2,7 +2,7 @@
 
 from plotStuff import plot_mat
 import numpy as np
-import scipy.ndimage.interpolation as scipy_interp
+import scipy.ndimage as ndimage
 import time
 import math
 import sys
@@ -34,24 +34,23 @@ def split_center(mat,split_size):
 
 def generateKernel(ktype,mask_data):
    size = mask_data['mat'].shape[0]
-   # default: uniform kernel
-   ret = np.ones((size,size),dtype=int)
-   # opt: center split
-   if (ktype == 'center_split'):
-      split_center(ret,0.10)
-   elif (ktype == 'heading'):
+   if (ktype == 'rotated'):
+      ret = np.ones((size,size),dtype=int)
       split_center(ret,0.10)
       theta_rad = math.atan(mask_data['hy']/mask_data['hx'])
       theta_deg = 180*theta_rad/math.pi
-      ret = scipy_interp.rotate(ret,theta_deg,mode='nearest',reshape=False)
+      ret = ndimage.interpolation.rotate(ret,theta_deg,mode='nearest',reshape=False)
    elif (ktype == 'gaussian'):
    # generate gaussian distributed kernel
-      mean = 0
-      stdev = 0.10
+      stdev = max(1,size//10)
+      ret = np.zeros((size,size),dtype=float)
+      ret[size//2][size//2] = 1
+      ret = ndimage.filters.gaussian_filter(ret,stdev)
+      # normalize values
+      ret /= ret.max()
    else:
-      # do nothing
-      return ret
-
+      # default: uniform kernel
+      ret = np.ones((size,size),dtype=int)
 
    return ret
 
@@ -60,6 +59,7 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
    # measure processing times
    procTime = 0.
 
+   print("-----------------")
    print("Scoring: t"+str(tcnt))
    print("Desc: "+str(desc))
    print("Kernel: "+ktype)
@@ -74,9 +74,10 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
    # initialize kernel
    kernel = generateKernel(ktype,trial_data[0][mcnt])
 
-   for sparse_mask in trial_masks[0:100]:
+   # for sparse_mask in trial_masks[0:100]:
+   for sparse_mask in trial_masks:
       mask = sparse_mask.toarray()
-      if (ktype == 'heading'):
+      if (ktype == 'rotated'):
          # refresh kernel
          kernel = generateKernel(ktype,trial_data[0][mcnt])
       # visualize loaded masks
