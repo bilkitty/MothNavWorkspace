@@ -2,7 +2,9 @@
 
 from plotStuff import plot_mat
 import numpy as np
+import scipy.ndimage.interpolation as scipy_interp
 import time
+import math
 import sys
 import glob
 
@@ -24,13 +26,32 @@ def score_frame(mask,kernel):
      ret /= mask.shape[0]/mask.shape[1]
    return ret
 
-def generateKernel(ktype,size):
+def split_center(mat,split_size):
+   left_edge = (mat.shape[0]/2)*(1-split_size)
+   right_edge = (mat.shape[0]/2)*(1+split_size)
+   mat[int(left_edge):int(right_edge)+1] = -1
+   return
+
+def generateKernel(ktype,mask_data):
+   size = mask_data['mat'].shape[0]
    # default: uniform kernel
    ret = np.ones((size,size),dtype=int)
-   # opt: vertical split
-   if(ktype == 'vertical_split'):
-      split_size = int(ret.shape[0] / 10)
-      ret[(ret.shape[0]/2)-split_size:(ret.shape[0]/2)+split_size+1] = -1
+   # opt: center split
+   if (ktype == 'center_split'):
+      split_center(ret,0.10)
+   elif (ktype == 'heading'):
+      split_center(ret,0.10)
+      theta_rad = math.atan(mask_data['hy']/mask_data['hx'])
+      theta_deg = 180*theta_rad/math.pi
+      ret = scipy_interp.rotate(ret,theta_deg,mode='nearest',reshape=False)
+   elif (ktype == 'gaussian'):
+   # generate gaussian distributed kernel
+      mean = 0
+      stdev = 0.10
+   else:
+      # do nothing
+      return ret
+
 
    return ret
 
@@ -44,16 +65,20 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
    print("Kernel: "+ktype)
 
    # extract masks and block size
-   trial_masks = trial_data[0]
+   trial_masks = trial_data[0]['mat']
    bsize = trial_data[1]
 
    # score discretized frames of trajectory
    scores = [0]*len(trial_masks)
    mcnt = 0 # mask count
+   # initialize kernel
+   kernel = generateKernel(ktype,trial_data[0][mcnt])
+
    for sparse_mask in trial_masks[0:100]:
       mask = sparse_mask.toarray()
-      # initialize kernel
-      kernel = generateKernel(ktype,mask.shape[0])
+      if (ktype == 'heading'):
+         # refresh kernel
+         kernel = generateKernel(ktype,trial_data[0][mcnt])
       # visualize loaded masks
       if (display and mcnt < 100):
          plot_mat(mask,bsize,"./masks/"+desc[0]
@@ -63,6 +88,7 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
             +'-t'+str(tcnt)
             +'-'+str(mcnt)+".png")
 
+      # get score
       start = time.time()
       scores[mcnt] = score_frame(mask,kernel)
       procTime += time.time() - start
