@@ -130,12 +130,10 @@ def discretize(pt,patch,sz,rmin):
       # check that distance from center to block is < tree radius
       for j in range(0, rb - rb_root2_by2):
         if (rr2 < ((i-rb)*SZb)**2 + ((j-rb)*SZb)**2):
-          print(str(((i-rb)*SZb)**2 + ((j-rb)*SZb)**2)+'>'+str(rr2))
           mask[i][j] = 0
 
       for j in range(rb - rb_root2_by2 + offset,tsize):
         if (rr2 < ((i-rb)*SZb)**2 + ((j-rb)*SZb)**2):
-          print(str(((i-rb)*SZb)**2 + ((j-rb)*SZb)**2)+'>'+str(rr2))
           mask[i][j] = 0
 
     # apply mask over tree center (within boundaries of mat)
@@ -146,8 +144,5 @@ def discretize(pt,patch,sz,rmin):
     icenter = int(Nb/2)+itt[0];
     jcenter = int(Nb/2)+itt[1];
     mat[icenter][jcenter] = -1
-
-  from plotStuff import plot_mat
-  plot_mat(mat,SZb)
 
   return [mat,SZb]
