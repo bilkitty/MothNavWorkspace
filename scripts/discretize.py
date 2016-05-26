@@ -61,16 +61,6 @@ def map_to_mat_idx(tcenter,orig,bsize):
 
   return (ii,jj)
 
-def keep_in_bounds(val,vmin,vmax):
-  if(val < vmin):
-    return vmin
-  if(vmax < val):
-    return vmax
-  return val
-
-def is_edge_idx(idx,msize):
-  return (idx == 0) or (idx == msize - 1)
-
 # divide patch into min tree radius/2 sized
 # blocks and bin tree points into a matrix
 # MxM.
