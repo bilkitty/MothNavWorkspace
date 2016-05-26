@@ -4,6 +4,7 @@ from loadYoyoData import load_data
 from score import score_trial
 from plotStuff import plot_scores, plot_mat
 import glob
+import time
 import pickle
 import sys
 import os
@@ -36,26 +37,30 @@ def main():
    tcnt = 1
    # kt = kernel_types[3]
    for kt in kernel_types:
-      scores.append( score_trial(pdata[trial[tcnt]],tcnt,description,ktype=kt,display=False) )
+
+      start = time.time()
+      s = score_trial(pdata[trial[tcnt]],tcnt,description,ktype=kt,display=False)
+      print("score time: "+str(round(1000*time.time() - 1000*start,5)))
+      scores.append(s)
       # plot_scores(scores,moth_id,tcnt,output_file+"_t"+str(tcnt)+"_"+kt+"_scores.png")
 
-   # compare different scores
-   import matplotlib.pyplot as plt
-   import numpy as np
+   # # compare different scores
+   # import matplotlib.pyplot as plt
+   # import numpy as np
 
-   plt.plot(np.arange(len(scores[0])),scores[0],label="uniform",color='y')
-   plt.plot(np.arange(len(scores[1])),scores[1],label="gaussian",color='r')
-   plt.plot(np.arange(len(scores[2])),scores[2],label="rotated",color='b')
-   plt.title("scores for "+moth_id+" t"+str(tcnt))
-   plt.legend()
-   plt.xlabel("trajectory frame")
-   plt.xlim(-1,len(scores[0])+1)
-   plt.ylabel("score")
-   smin = [min(scores[0]),min(scores[1]),min(scores[2])]
-   smax = [max(scores[0]),max(scores[1]),max(scores[2])]
-   pad = 0.1*(max(smax) - min(smin))
-   plt.ylim(min(smin)-pad,max(smax)+pad+1)
-   plt.show()
+   # plt.plot(np.arange(len(scores[0])),scores[0],label="uniform",color='y')
+   # plt.plot(np.arange(len(scores[1])),scores[1],label="gaussian",color='r')
+   # plt.plot(np.arange(len(scores[2])),scores[2],label="rotated",color='b')
+   # plt.title("scores for "+moth_id+" t"+str(tcnt))
+   # plt.legend()
+   # plt.xlabel("trajectory frame")
+   # plt.xlim(-1,len(scores[0])+1)
+   # plt.ylabel("score")
+   # smin = [min(scores[0]),min(scores[1]),min(scores[2])]
+   # smax = [max(scores[0]),max(scores[1]),max(scores[2])]
+   # pad = 0.1*(max(smax) - min(smin))
+   # plt.ylim(min(smin)-pad,max(smax)+pad+1)
+   # plt.show()
 
    handle.close()
 
