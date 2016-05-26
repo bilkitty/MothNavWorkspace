@@ -52,12 +52,22 @@ def generateKernel(ktype,mask_data):
       # default: uniform kernel
       ret = np.ones((size,size),dtype=int)
 
+      # # generating kernel using params A,Rmean,Rsigma
+      # import pylab
+      # g2d = lambda x,y,A,Rmean,Rstdev: A*math.exp((-1/(2*Rstde**2))+
+      #    A*math.exp((-1/(2*Rstdev**2))*((-1*Rmean-y)**2+(-1*Rmean-x)**2))
+      # for i in range(0,N):
+      #    for j in range(0,N):
+      #       gaussian2d[i,j] = g2d(x[i],y[j],.5,30,10)
+      # pylab.pcolor(x,y,gaussian2d)
+      # pylab.show()
+
    return ret
 
 # think about keeping data frames as is for simplicity
 def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
-   # measure processing times
-   procTime = 0.
+   # measure processing times [score,genkernel]
+   procTime = [0.]*2
 
    print("-----------------")
    print("Scoring: t"+str(tcnt))
@@ -72,14 +82,19 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
    scores = [0]*len(trial_masks)
    mcnt = 0 # mask count
    # initialize kernel
+   start = time.time()
    kernel = generateKernel(ktype,trial_data[0][mcnt])
+   procTime[1] += time.time() - start
 
    # for sparse_mask in trial_masks[0:100]:
    for sparse_mask in trial_masks:
       mask = sparse_mask.toarray()
       if (ktype == 'rotated'):
          # refresh kernel
+         start = time.time()
          kernel = generateKernel(ktype,trial_data[0][mcnt])
+         procTime[1] += time.time() - start
+
       # visualize loaded masks
       if (display and mcnt < 100):
          plot_mat(mask,bsize,"./masks/"+desc[0]
@@ -92,7 +107,7 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
       # get score
       start = time.time()
       scores[mcnt] = score_frame(mask,kernel)
-      procTime += time.time() - start
+      procTime[0] += time.time() - start
 
       mcnt += 1
 
@@ -101,7 +116,10 @@ def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
    print("cummulative_score: "+str(sum(scores[0:mcnt])))
    print("min_score: "+str(min(scores[0:mcnt])))
    print("max_score: "+str(max(scores[0:mcnt])))
-   print("==== CPU TIME ====")
-   print("avg time (ms) per mask: "+str(round(1000*procTime/mcnt,5)))
+   print("==== CPU TIME (ms) ====")
+   print("generating kernel: "+str(round(1000*procTime[1],5)))
+   print("processing masks: "+str(round(1000*procTime[0],5)))
+   print("avg per mask: "+str(round(1000*procTime[0]/mcnt,5)))
+   print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
 
    return scores[0:mcnt]
