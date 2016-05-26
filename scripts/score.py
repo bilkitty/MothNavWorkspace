@@ -27,32 +27,23 @@ def score_frame(mask,kernel):
   ret /= mask.shape[0]/mask.shape[1]
   return ret
 
-def split_center(mat,split_size):
-  left_edge = (mat.shape[0]/2)*(1-split_size)
-  right_edge = (mat.shape[0]/2)*(1+split_size)
-  mat[int(left_edge):int(right_edge)+1] = -1
-  return
-
 # instead of ktype, pass kernel function (e.g., 2d gaussian function)
 def generateKernel(ktype,mask_data):
   N = mask_data['mat'].shape[0]
   amplitude = 1
   # gaussian function (pass this as arg)
-  oneDGaussian = lambda vbar,v,vsig: math.exp(-1*(vbar-v)**2 / (2*vsig**2))
-  # oneDGaussian = lambda vbar,v,vsig: numpy.exp(-1*(vbar-v)**2 / (2*vsig**2))
-  # g2d = lambda x,y,A,Rmean,Rstdev: A*math.exp((-1/(2*Rstdev**2))+
-  #   A*math.exp((-1/(2*Rstdev**2))*((-1*Rmean-y)**2+(-1*Rmean-x)**2)))
+  # oneDGaussian = lambda vbar,v,vsig: math.exp(-1*(vbar-v)**2 / (2*vsig**2))
+  oneDGaussian = lambda vbar,v,vsig: numpy.exp(-1*(vbar-v)**2 / (2*vsig**2))
   # initialize domain
   x = np.linspace(-N//2,(N//2)+1,N)
   y = np.linspace(-N//2,(N//2)+1,N)
   # fill in the kernel using desired function
-  xbar,ybar = 0,0
-  xsig,ysig = 10,10
-  gaussian2d = np.zeros((N,N))
-  for i in range(0,N):
-    for j in range(0,N):
-      gaussian2d[i,j] = amplitude*oneDGaussian(xbar,x[i],xsig)*oneDGaussian(ybar,y[j],ysig)
-      # gaussian2d[i,j] = g2d(x[i],y[j],.5,0,10)
+  xbar,ybar = 20*np.ones(N),0*np.ones(N)
+  xsig,ysig = 10,1
+  # (?) We need to perform a dot product between x1d.T and y1d
+  #   but for whatever reason, numpy.dot does not produce a
+  #   matrix of shape = (N,N)
+  gaussian2d = amplitude*oneDGaussian(xbar,x[i],xsig)*oneDGaussian(ybar,y[j],ysig)
 
   # let's check out what the kernel looks like
   pylab.pcolor(x,y,gaussian2d)
