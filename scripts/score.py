@@ -5,6 +5,7 @@ import numpy as np
 import scipy.ndimage as ndimage
 import time
 import math
+import pylab
 import sys
 import glob
 
@@ -34,30 +35,35 @@ def split_center(mat,split_size):
 
 # instead of ktype, pass kernel function (e.g., 2d gaussian function)
 def generateKernel(ktype,mask_data):
-  size = mask_data['mat'].shape[0]
+  N = mask_data['mat'].shape[0]
+  amplitude = 1
+  # gaussian function (pass this as arg)
+  oneDGaussian = lambda vbar,v,vsig: math.exp(-1*(vbar-v)**2 / (2*vsig**2))
+  # oneDGaussian = lambda vbar,v,vsig: numpy.exp(-1*(vbar-v)**2 / (2*vsig**2))
+  # g2d = lambda x,y,A,Rmean,Rstdev: A*math.exp((-1/(2*Rstdev**2))+
+  #   A*math.exp((-1/(2*Rstdev**2))*((-1*Rmean-y)**2+(-1*Rmean-x)**2)))
+  # initialize domain
+  x = np.linspace(-N//2,(N//2)+1,N)
+  y = np.linspace(-N//2,(N//2)+1,N)
+  # fill in the kernel using desired function
+  xbar,ybar = 0,0
+  xsig,ysig = 10,10
+  gaussian2d = np.zeros((N,N))
+  for i in range(0,N):
+    for j in range(0,N):
+      gaussian2d[i,j] = amplitude*oneDGaussian(xbar,x[i],xsig)*oneDGaussian(ybar,y[j],ysig)
+      # gaussian2d[i,j] = g2d(x[i],y[j],.5,0,10)
+
+  # let's check out what the kernel looks like
+  pylab.pcolor(x,y,gaussian2d)
+  pylab.show()
+
   if (ktype == 'rotated'):
-    ret = np.ones((size,size),dtype=int)
-    split_center(ret,0.10)
     theta_rad = math.atan(mask_data['hy']/mask_data['hx'])
     theta_deg = 180*theta_rad/math.pi
-    ret = ndimage.interpolation.rotate(ret,theta_deg,mode='nearest',reshape=False)
-  elif (ktype == 'gaussian'):
-    # generate gaussian distributed kernel
-    stdev = max(1,size//10)
-    ret = np.zeros((size,size),dtype=float)
-    ret[size//2][size//2] = 1
-    ret = ndimage.filters.gaussian_filter(ret,stdev)
-    # normalize values
-    ret /= ret.max()
-  else:
-    # default: uniform kernel
-    ret = np.ones((size,size),dtype=int)
+    gaussian2d = ndimage.interpolation.rotate(gaussian2d,theta_deg,mode='nearest',reshape=False)
 
-    # generating kernel using params A,Rmean,Rsigma
-    import pylab
-    import math
-
-    return ret
+  return gaussian2d
 
 # think about keeping data frames as is for simplicity
 def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
