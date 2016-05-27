@@ -31,8 +31,6 @@ def score_frame(mask,kernel):
 def generateKernel(ktype,mask_data):
   N = mask_data['mat'].shape[0]
   amplitude = 1
-  # gaussian function (pass this as arg)
-  # oneDGaussian = lambda vbar,v,vsig: math.exp(-1*(vbar-v)**2 / (2*vsig**2))
   oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
   # initialize domain
   x = np.linspace(-N//2,(N//2)+1,N)
@@ -40,12 +38,9 @@ def generateKernel(ktype,mask_data):
   # fill in the kernel using desired function
   xbar,ybar = 0*np.ones(N),0*np.ones(N)
   xsig,ysig = 10,10
-  # (?) We need to perform a dot product between x1d.T and y1d
-  #   but for whatever reason, numpy.dot does not produce a
-  #   matrix of shape = (N,N)
-  # column vector
+  # reshape numpy array to column vector Nx1
   gaussianx = oneDGaussian(xbar,x,xsig).reshape(N,1)
-  # row vector
+  # reshape numpy array to row vector 1xN
   gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
   # compute dot product of x and y
   gaussian2d = amplitude*np.dot(gaussianx,gaussiany)
