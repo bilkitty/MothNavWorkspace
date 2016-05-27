@@ -33,17 +33,22 @@ def generateKernel(ktype,mask_data):
   amplitude = 1
   # gaussian function (pass this as arg)
   # oneDGaussian = lambda vbar,v,vsig: math.exp(-1*(vbar-v)**2 / (2*vsig**2))
-  oneDGaussian = lambda vbar,v,vsig: numpy.exp(-1*(vbar-v)**2 / (2*vsig**2))
+  oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
   # initialize domain
   x = np.linspace(-N//2,(N//2)+1,N)
   y = np.linspace(-N//2,(N//2)+1,N)
   # fill in the kernel using desired function
-  xbar,ybar = 20*np.ones(N),0*np.ones(N)
-  xsig,ysig = 10,1
+  xbar,ybar = 0*np.ones(N),0*np.ones(N)
+  xsig,ysig = 10,10
   # (?) We need to perform a dot product between x1d.T and y1d
   #   but for whatever reason, numpy.dot does not produce a
   #   matrix of shape = (N,N)
-  gaussian2d = amplitude*oneDGaussian(xbar,x[i],xsig)*oneDGaussian(ybar,y[j],ysig)
+  # column vector
+  gaussianx = oneDGaussian(xbar,x,xsig).reshape(N,1)
+  # row vector
+  gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
+  # compute dot product of x and y
+  gaussian2d = amplitude*np.dot(gaussianx,gaussiany)
 
   # let's check out what the kernel looks like
   pylab.pcolor(x,y,gaussian2d)
