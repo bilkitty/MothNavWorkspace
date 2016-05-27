@@ -28,20 +28,29 @@ def score_frame(mask,kernel):
   return ret
 
 # instead of ktype, pass kernel function (e.g., 2d gaussian function)
-def generateKernel(ktype,mask_data):
-  N = mask_data['mat'].shape[0]
-  amplitude = 1
+def generateKernel(mask_data,means,stdevs,amplitude,rotate=False):
+  """
+  (ndarray(ndarray,f4,f4,f4,f4)), (tuple(f4,f4)), (tuple(f4,f4)), (f4) -> (ndarray(ndarray))
+
+  Given N (masks,points,headings) and gaussian parameters (mean,stdev,amplitude),
+  compute an NxN Gaussian kernel. Return an unrotated kernel by default and a
+  rotate kernel if rotate is True.
+  """
+  SIZE = mask_data['mat'].shape[0]
   oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
   # initialize domain
-  x = np.linspace(-N//2,(N//2)+1,N)
-  y = np.linspace(-N//2,(N//2)+1,N)
+  x = np.linspace(-SIZE//2,(SIZE//2)+1,SIZE)
+  y = np.linspace(-SIZE//2,(SIZE//2)+1,SIZE)
   # fill in the kernel using desired function
-  xbar,ybar = 0*np.ones(N),0*np.ones(N)
+  # amplitude = 1
+  # xbar,ybar = 0*np.ones(SIZE),0*np.ones(SIZE)
+  # xsig,ysig = 10,10
+  xbar,ybar = means[0],means[1]
   xsig,ysig = 10,10
   # reshape numpy array to column vector Nx1
-  gaussianx = oneDGaussian(xbar,x,xsig).reshape(N,1)
+  gaussianx = oneDGaussian(xbar,x,xsig).reshape(SIZE,1)
   # reshape numpy array to row vector 1xN
-  gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
+  gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,SIZE)
   # compute dot product of x and y
   gaussian2d = amplitude*np.dot(gaussianx,gaussiany)
 
@@ -49,7 +58,7 @@ def generateKernel(ktype,mask_data):
   pylab.pcolor(x,y,gaussian2d)
   pylab.show()
 
-  if (ktype == 'rotated'):
+  if (rotate):
     theta_rad = math.atan(mask_data['hy']/mask_data['hx'])
     theta_deg = 180*theta_rad/math.pi
     gaussian2d = ndimage.interpolation.rotate(gaussian2d,theta_deg,mode='nearest',reshape=False)

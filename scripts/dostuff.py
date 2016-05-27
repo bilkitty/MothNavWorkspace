@@ -15,7 +15,7 @@ def main():
    pickle_file = "/home/bilkit/Dropbox/moth_nav_analysis/data/masks/moth1/4_4_8.pickle"
    output_file = "/home/bilkit/Dropbox/moth_nav_analysis/scripts/masks"
 
-   # extract desctiption
+   # extract description
    moth_id = pickle_file.split('/')[-2]
    conditions = pickle_file.split('/')[-1]
    conditions = conditions.split('.')[0]
