@@ -120,6 +120,21 @@ def plot(traj,env,targ_file=None):
    visualize(plt,targ_file)
    return
 
+def plot_trees(env,targ_file=None):
+   ax = init_axes()
+
+   print("plotting trees: "+str(len(env)))
+   for tree in env.values:
+      ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
+
+   plt.xlabel("x")
+   plt.xlim(min(env.x),max(env.x))
+   plt.ylabel("y")
+   plt.ylim(min(env.y),max(env.y))
+
+   visualize(plt,targ_file)
+   return
+
 # displays objects in environment, patch,
 # and trajectory point. A box of length
 # 2*patch size is drawn to visually indicate
