@@ -6,10 +6,9 @@ import numpy as np
 import math
 
 
-SRC = "/home/bilkit/Dropbox/moth_nav_analysis/data/test/csv/forest.csv"
-DST = "./"
+FOREST_PATH = "/home/bilkit/Dropbox/moth_nav_analysis/data/forests/"
 
-def createNForests(N,src_filepath=SRC,dst_filepath=DST):
+def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_PATH):
   """
   (int,str,str) -> None
 
@@ -37,8 +36,7 @@ def createNForests(N,src_filepath=SRC,dst_filepath=DST):
     new_mean, new_sig = computeNormalStats(new_radii)
     print("mean = {:2f}\n sig = {:2f}".format(new_mean,new_sig))
 
-    plot_trees(new_forest)
-
+    # save tree data as cvs
   return
 
 
