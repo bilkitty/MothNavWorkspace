@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 from loadYoyoData import load_data
-from plotStuff import plot_scores, plot_mat
+from plotStuff import plot_trees
 import numpy as np
-import pandas as pd
+import math
 
 
 SRC = "/home/bilkit/Dropbox/moth_nav_analysis/data/test/csv/forest.csv"
@@ -20,15 +20,10 @@ def createNForests(N,src_filepath=SRC,dst_filepath=DST):
 
   # load tree data
   seed_forest = load_data('csv',SRC)
-  seed_radii = np.zeros(seed_forest.shape[0],dtype=np.float)
+  # compute distance between forest center and tree centers
+  seed_radii = (seed_forest['x']**2 + seed_forest['y']**2)**0.5
 
-  # measure the mean and stdev of radii
-  for i,(x,y) in enumerate(seed_forest[['x','y']].values):
-      seed_radii[i] = (x**2 + y**2)**0.5
-      if (i % 100) == 0:
-        print("{0:d} {1:2f},{2:2f} --> {3:2f}".format(i,x,y,seed_radii[i]))
-
-  # call get stats
+  # compute mean and standard deviation of this distance
   mean_radius, sig_radius = computeNormalStats(seed_radii)
   print("mean = {:2f}\n sig = {:2f}".format(mean_radius,sig_radius))
 
@@ -36,33 +31,36 @@ def createNForests(N,src_filepath=SRC,dst_filepath=DST):
   #   save as csv in dest path
   for iforest in range(N):
     print("processing forest: {0:d}".format(iforest))
+    new_forest = seed_forest.copy()
     newForest(new_forest,mean_radius,sig_radius)
+    new_radii = (new_forest['x']**2 + new_forest['y']**2)**0.5
+    new_mean, new_sig = computeNormalStats(new_radii)
+    print("mean = {:2f}\n sig = {:2f}".format(new_mean,new_sig))
 
-
-
+    plot_trees(new_forest)
 
   return
 
 
-def newForest(seed,mean,sig):
+def newForest(new_forest_template,mean_radius,sigma_radius):
   """
-  (pandas.dataframe, f4, f4) -> (pandas.dataframe)
+  (pandas.dataframe('x','y','r'), f4, f4) -> None
 
   Given a pandas data frame of forest data, reproduce a
-  new set of forest data sample_size trees.
-  >>> newForest(loaded_forest_data,sample_size)
+  new set of forest data sample_size trees. The new distrubution
+  >>> newForest(a_forest,mean_radius,sigma_radius)
   """
-  # once we have mean and stdev, compute N(mean,sigma)
-  # and uniform distribution from [0,2pi). Then sample
-  # size trees from each dist
-  # copy dataframe.values into newForest
-  new_forest = seed
 
-  # for all radii (use enumerate to get index to access thetas):
-  #   compute (x,y) from theta and radius
-  #   overwrite 'x' and 'y' field in newForest at index
+  # generate new distrubution of trees using normal dist for
+  # radii and uniform dist for theta
+  sample_size = new_forest_template.shape[0]
+  new_radii = np.random.normal(mean_radius,sigma_radius,sample_size)
+  new_theta = np.random.uniform(0,2*math.pi,sample_size)
 
-  return new_forest
+  new_forest_template['x'] = new_radii * np.cos(new_theta)
+  new_forest_template['y'] = new_radii * np.sin(new_theta)
+
+  return
 
 def computeNormalStats(arr):
   """
