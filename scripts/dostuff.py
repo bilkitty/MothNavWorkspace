@@ -12,7 +12,7 @@ import os
 
 def main():
    kernel_types = ['uniform','gaussian','rotated']
-   pickle_file = "/home/bilkit/Dropbox/moth_nav_analysis/data/masks/moth1/4_4_8.pickle"
+   pickle_file = "/home/bilkit/Dropbox/moth_nav_analysis/data/masks/original_set/moth1/4_4_8.pickle"
    output_file = "/home/bilkit/Dropbox/moth_nav_analysis/scripts/masks"
 
    # extract description
