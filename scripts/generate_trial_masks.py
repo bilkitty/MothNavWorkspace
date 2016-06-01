@@ -82,10 +82,13 @@ def main():
    for t in single_trials: print('\t'+t+'\n')
 
    # log processed trials in Notes file
+   # include datetime
    if (os.path.exists(DATA_LOC+"/trial_log")):
       LOG = open(DATA_LOC+"/trial_log",'ab') # append to file
    else:
       LOG = open(DATA_LOC+"/trial_log",'wb')
+   import time,datetime
+   writeTo(LOG,str(datetime.datetime.fromtimestamp(time.time())))
 
    # load the first file in data dir (assume files are sorted)
    trial_cnt = 0
@@ -130,17 +133,17 @@ def main():
          str(int(raw_data.fog_min.iloc[0]))+'_'+\
          str(int(raw_data.fog_max.iloc[0]))
 
-      PROCESSTRIAL(TRIAL_HASH,DTREE,TRAJ,'T'+STR(TRIAL_CNT),RAW_DATA.DATETIME.ILOC[0])
+      processTrial(trial_hash,dtree,traj,'t'+str(trial_cnt),raw_data.datetime.iloc[0])
 
-      # UPDATE TRIAL COUNT
-      TRIAL_CNT += 1
+      # update trial count
+      trial_cnt += 1
 
 
-   # SAVE THE LAST TRIAL_HASH
-   WITH OPEN(FILEPATH+'/'+DESC+'.PICKLE', 'WB') AS HANDLE:
-     PICKLE.DUMP(TRIAL_HASH, HANDLE)
+   # save the last trial_hash
+   with open(filepath+'/'+desc+'.pickle', 'wb') as handle:
+     pickle.dump(trial_hash, handle)
 
-   LOG.CLOSE()
+   LOG.close()
 
    print("~~Done :)")
    return
