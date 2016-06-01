@@ -58,6 +58,9 @@ def main():
       FOREST_LOC = sys.argv[1]
       DATA_LOC = DATA_LOC.replace('original_set','random_sets')
       DATA_LOC += "/"+FOREST_LOC.split('/')[-1]
+      # make sure directory exists for saving data
+      if not os.path.exists(DATA_LOC):
+         os.makedirs(DATA_LOC)
 
    # read tree data
    dtree = load_data("csv",FOREST_LOC)
