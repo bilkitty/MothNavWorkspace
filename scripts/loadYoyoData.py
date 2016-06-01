@@ -35,7 +35,7 @@ def save_data(data_frame,type,file_path):
    Save data_frame as cvs or hdf in the given file path.
    """
    if (type == 'csv'):
-      data_frame.to_csv(file_path)
+      data_frame.to_csv(file_path,index=False)
    else:
       print("(!) save_data: file type, "+type+", is unrecognized.")
 
