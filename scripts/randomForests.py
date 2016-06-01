@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from loadYoyoData import load_data
+from loadYoyoData import load_data,save_data
 from plotStuff import plot_trees
 import numpy as np
 import math
@@ -18,25 +18,34 @@ def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_P
   """
 
   # load tree data
-  seed_forest = load_data('csv',SRC)
+  seed_forest = load_data('csv',src_filepath)
   # compute distance between forest center and tree centers
   seed_radii = (seed_forest['x']**2 + seed_forest['y']**2)**0.5
 
   # compute mean and standard deviation of this distance
   mean_radius, sig_radius = computeNormalStats(seed_radii)
-  print("mean = {:2f}\n sig = {:2f}".format(mean_radius,sig_radius))
+  print("seed forest:\nmean = {:2f}\n sig = {:2f}".format(mean_radius,sig_radius))
 
-  # loop over n:
-  #   save as csv in dest path
+  # generate and save new forests
+  import time, datetime, re
+  non_digit_chars = re.compile("\D")
   for iforest in range(N):
     print("processing forest: {0:d}".format(iforest))
     new_forest = seed_forest.copy()
     newForest(new_forest,mean_radius,sig_radius)
+    # useful for debug
     new_radii = (new_forest['x']**2 + new_forest['y']**2)**0.5
     new_mean, new_sig = computeNormalStats(new_radii)
     print("mean = {:2f}\n sig = {:2f}".format(new_mean,new_sig))
 
-    # save tree data as cvs
+    # obtain datetime from timestamp then create label, yr_mo_dy_hr_min_sec
+    datetime_from_timestamp = datetime.datetime.fromtimestamp(time.time())
+    # # we only need precision up to whole seconds
+    # label = datetime_from_timestamp.split('.')[0]
+    label = non_digit_chars.sub('_',str(datetime_from_timestamp))
+    # save tree data as cvs with timestamp/datetime label
+    save_data(new_forest,'csv',dst_filepath+"forest_"+label)
+    print("saved @ "+dst_filepath+"forest_"+label)
   return
 
 
@@ -55,6 +64,7 @@ def newForest(new_forest_template,mean_radius,sigma_radius):
   new_radii = np.random.normal(mean_radius,sigma_radius,sample_size)
   new_theta = np.random.uniform(0,2*math.pi,sample_size)
 
+  # overwrite original x,y with x',y' from new radius and theta
   new_forest_template['x'] = new_radii * np.cos(new_theta)
   new_forest_template['y'] = new_radii * np.sin(new_theta)
 
