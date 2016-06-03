@@ -4,7 +4,6 @@ from loadYoyoData import load_data
 from score import score_trial
 from plotStuff import plot_scores, plot_mat
 import glob
-import time
 import pickle
 import sys
 import os
@@ -38,9 +37,7 @@ def main():
    # kt = kernel_types[3]
    for kt in kernel_types:
 
-      start = time.time()
       s = score_trial(pdata[trial[tcnt]],tcnt,description,ktype=kt,display=False)
-      print("score time: "+str(round(1000*time.time() - 1000*start,5)))
       scores.append(s)
       # plot_scores(scores,moth_id,tcnt,output_file+"_t"+str(tcnt)+"_"+kt+"_scores.png")
 
