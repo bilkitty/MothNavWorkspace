@@ -37,7 +37,7 @@ def save_dataframe(data_frame,file_format,file_path):
    """
    filename = file_path.split('/')[-1]
    file_location = file_path.replace(filename,"")
-   if (not osp.exist(file_location)):
+   if (not osp.exists(file_location)):
       raise EXCEPTION("Filepath doesn't exist")
 
    if (file_format == 'csv'):
