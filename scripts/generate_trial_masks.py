@@ -12,20 +12,21 @@ def discretize_and_save(trial_hash,forest,traj,trial_id,trial_datetime):
    (dict,pandas.dataframe,pandas.dataframe,str,trial_datetime) -> None
 
    Generates a set of discretized frames for a given trajectory and forest.
+   It is expected that traj is a dataframe of x,y,headingx,headingy data.
    For each point, a sparse matrix is computed that describes the forest
    environment near it. This point is packed, with its corresponding frame,
-   into a list. This list is stored in the dictionary, trial_hash, using
+   into an array. This array is stored in the dictionary, trial_hash, using
    the key trial_id/datetime.
    """
    pt_cnt = 0
    bsize = 0
-   # list of mat,data pairs
+   # array of mat,data pairs
    trial = np.zeros(len(traj),dtype=[('mat','O')
       ,('x', '<f4'), ('y', '<f4')
       ,('hx', '<f4'), ('hy', '<f4')])
-   # process other points
+   # process other points from
    for point in traj.values:
-      xy = point[0:2] # point = [x,y,hx,hy]
+      xy = point[0:2] #
       # get scoring region, may contain trees
       [patch,sz] = discretize.get_patch(xy,forest)
       # discretize that shit
@@ -58,9 +59,9 @@ def writeToFile(file_name,txt):
 
 def processTrials(batch_o_trials,forest,filepath_prefix,logfile):
    """
-   (list of str,pandas.dataframe,str,str) -> None
+   (array of str,pandas.dataframe,str,str) -> None
    Loads a data frame from each file path in the list and transforms it
-   into a list of discretized frames. These frames are saved into a
+   into an array of discretized frames. These frames are saved into a
    dictionary of the corresponding mothid. The dictionary of trials is
    saved into a pickle labeled with the trial conditions.
    """
