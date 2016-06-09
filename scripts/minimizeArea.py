@@ -12,6 +12,7 @@ find an optimal solution to this problem.
 """
 
 import operator
+import random
 import numpy
 import math
 
@@ -22,31 +23,46 @@ from deap import tools
 from deap import gp
 
 # Initialize problem input and output vectors
-
 NPOINTS = 3
 POINT_RANGE = (-10,10)
 MSQUARES = 1
 # later, we generate a set of N points of size SETS
 SETS = 10
 # input : [(p0x,p0y),...,(pNx,pNy)]
-inputs = [[(0,0) for i in range(NPOINTS)]] * SETS
+inputs = [[None]] * SETS
 # output : [S0,...,SM] where S = (xleft,ybottom,length)
 outputs = [[None]] * SETS
 
 # (TODO) initialize input and output
+random.seed(10)
+# Generates two random numbers in the range; including endpoints.
+# ((int,int)) -> ((double,double))
+randomXY = lambda rangeXY: (random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1]))
+
 for i in range(SETS):
-  # input - select random x and y using (max - min) range
-  # then shift x and y by min (i.e., x+min, y+min)
+  # input - select random x and y in point range
+  inputs[i] = [randomXY(POINT_RANGE) for j in range(NPOINTS)]
+  print("INPUT:",end="\t")
+  print(inputs[i])
 
   # output - write a script that finds min area using
   # some extant algorithm.
   # This step is unclear because there is no straight
   # forward way to verify the potential solutions like
   # the mux.py example demos.
+  # (!) for now just use unit squares located at the points
+  outputs[i] = [(inputs[j][0],inputs[j][1],1) for j in range(NPOINTS)]
+  print("OUTPUT:",end="\t")
+  print(outputs[i])
 
   if(i == SETS-1): print("init completed")
 
-pset = gp.PrimitiveSet("MAIN", MUX_TOTAL_LINES, "IN")
+# (?) use strongly typed primitive set... probably
+import itertools
+pset = gp.PrimitiveSetTyped("MAIN"
+  ,[[i for i in itertools.repeat((float,float),NPOINTS)]]*SETS
+  ,itertools.repeat(list,SETS)
+  ,prefix="IN")
 # (TODO) add terminals and primitives
 # operations:
 # - insert unit square to the set of squares *this op allows us to
@@ -58,6 +74,8 @@ pset = gp.PrimitiveSet("MAIN", MUX_TOTAL_LINES, "IN")
 #   the other operations based on whether
 #   all points are covered by the current
 #   set of squares.
+# terminals:
+
 pset.addPrimitive(if_then_else, 3)
 
 # (?) we may need to play around with the weights here
@@ -82,7 +100,7 @@ toolbox.register("expr_mut", gp.genGrow, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
 def main():
-  random.seed(10)
+
   pop = toolbox.population(n=40)
   hof = tools.HallOfFame(1)
   stats = tools.Statistics(lambda ind: ind.fitness.values)
