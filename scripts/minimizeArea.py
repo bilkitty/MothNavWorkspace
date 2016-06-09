@@ -38,6 +38,11 @@ random.seed(10)
 # Generates two random numbers in the range; including endpoints.
 # ((int,int)) -> ((double,double))
 randomXY = lambda rangeXY: (random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1]))
+# potential fitness functions - a lower score from these functions is better
+# rewards individuals with lots of squares
+averageArea = lambda squares: sum(squares[i][2] for i in range(len(squares))) / len(squares)
+# penalizes individuals with decentralized squares
+totalAreaBySigXY = lambda areas,xs,ys: sum(areas) * numpy.std(xs) * numpy.std(ys)
 
 for i in range(SETS):
   # input - select random x and y in point range
@@ -45,12 +50,10 @@ for i in range(SETS):
   print("INPUT:",end="\t")
   print(inputs[i])
 
-  # output - write a script that finds min area using
-  # some extant algorithm.
-  # This step is unclear because there is no straight
-  # forward way to verify the potential solutions like
-  # the mux.py example demos.
-  # (!) for now just use unit squares located at the points
+  # (!) for now just use unit squares located at the points or
+  # create the best worst case solution i.e., a sqaure located
+  # at the bottom-left most point and scaled such that it
+  # encloses all other points.
   outputs[i] = [(inputs[i][j][0],inputs[i][j][1],1) for j in range(NPOINTS)]
   print("OUTPUT:",end="\t")
   print(outputs[i])
@@ -87,9 +90,12 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ex
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=pset)
 
+# (TODO) The following may make good fitness functions:
+# - difference between indiv and worst case sum square areas / number of squares
+# - difference between indiv and worst case sum square areas / std of square coordinates
 def evaluateMinArea(individual):
   func = toolbox.compile(expr=individual)
-  return sum(func(*in_) == out for in_, out in zip(inputs, outputs)),
+  return sum(abs(averageArea(func(*in_)) - averageArea(out)) for in_, out in zip(inputs, outputs)),
 
 toolbox.register("evaluate", evaluateMinArea)
 toolbox.register("select", tools.selTournament, tournsize=7)
