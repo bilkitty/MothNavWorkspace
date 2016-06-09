@@ -33,7 +33,7 @@ inputs = [[None]] * SETS
 # output : [S0,...,SM] where S = (xleft,ybottom,length)
 outputs = [[None]] * SETS
 
-# (TODO) initialize input and output
+# initialize input and output
 random.seed(10)
 # Generates two random numbers in the range; including endpoints.
 # ((int,int)) -> ((double,double))
@@ -51,7 +51,7 @@ for i in range(SETS):
   # forward way to verify the potential solutions like
   # the mux.py example demos.
   # (!) for now just use unit squares located at the points
-  outputs[i] = [(inputs[j][0],inputs[j][1],1) for j in range(NPOINTS)]
+  outputs[i] = [(inputs[i][j][0],inputs[i][j][1],1) for j in range(NPOINTS)]
   print("OUTPUT:",end="\t")
   print(outputs[i])
 
