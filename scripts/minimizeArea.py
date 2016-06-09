@@ -57,13 +57,11 @@ for i in range(SETS):
 
   if(i == SETS-1): print("init completed")
 
-# (?) use strongly typed primitive set... probably
 import itertools
-pset = gp.PrimitiveSetTyped("MAIN"
-  ,[[i for i in itertools.repeat((float,float),NPOINTS)]]*SETS
-  ,itertools.repeat(list,SETS)
-  ,prefix="IN")
-# (TODO) add terminals and primitives
+input_types = [itertools.repeat((float,float),NPOINTS)]*SETS
+output_types = itertools.repeat(list,SETS)
+pset = gp.PrimitiveSetTyped("MAIN",input_types,output_types,prefix="IN")
+# (TODO) add terminals and primitives TYPED
 # operations:
 # - insert unit square to the set of squares *this op allows us to
 #   add in a new set of parameters that contribute to a potentially
