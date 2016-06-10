@@ -22,25 +22,69 @@ from deap import creator
 from deap import tools
 from deap import gp
 
+# - if/else or for loop that performs one of
+#   the other operations based on whether
+#   all points are covered by the current
+#   set of squares.
+# operations that make up a population member
+def if_then_else(condition, out1, out2):
+  """
+  (bool, )
+  """
+  return out1 if condition else out2
+def insert_unit_square(squares,xy):
+  """
+  ([[double,double,int]],[double,double]) -> [[double,double,int]]
+  """
+  if (squares == None):
+    raise Exception("(!) insert_unit_square: squares is type 'None'.")
+  squares.append([xy[0],xy[1],1])
+  return squares
+def scale_square(squares,index,scalar):
+  """
+  ([[double,double,int]],int,int) -> [[double,double,int]]
+  """
+  if (scalar <= 0):
+    raise Exception("(!) scale_square: scalar <= 0.")
+  # only apply scalar to valid index
+  if (0 <= index and index < len(squares)):
+    squares[index][2] *= scalar
+  return squares
+def shift_square(squares,index,dxdy):
+  """
+  ([[double,double,int]],int,[double,double]) -> [[double,double,int]]
+  Shift the square at the given index by dxdy and return the modified set
+  of squares. dxdy is the difference in x and y between the source point
+  and destination. In other words, if the source locaiton is [a,b] and the
+  destination is [c,d] then dxdy is [a-c,b-d].
+  """
+  # only apply shift to valid index
+  if (0 <= index and index < len(squares)):
+    squares[index][0] -= dxdy[0]
+    squares[index][1] -= dxdy[1]
+  return squares
+
 # Initialize problem input and output vectors
 NPOINTS = 3
 POINT_RANGE = (-10,10)
 MSQUARES = 1
 # later, we generate a set of N points of size SETS
 SETS = 10
-# input : [(p0x,p0y),...,(pNx,pNy)]
+# input : [[p0x,p0y],...,[pNx,pNy]]
 inputs = [[None]] * SETS
-# output : [S0,...,SM] where S = (xleft,ybottom,length)
+# output : [S0,...,SM] where S = [xleft,ybottom,length]
 outputs = [[None]] * SETS
 
 # initialize input and output
 random.seed(10)
 # Generates two random numbers in the range; including endpoints.
-# ((int,int)) -> ((double,double))
-randomXY = lambda rangeXY: (random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1]))
+# ((int,int)) -> ([double,double])
+randomXY = lambda rangeXY: [random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1])]
 # potential fitness functions - a lower score from these functions is better
+# ([[double,double,int]]) -> (double)
 # rewards individuals with lots of squares
 averageArea = lambda squares: sum(squares[i][2] for i in range(len(squares))) / len(squares)
+# ([double],[double],[double]) -> (double)
 # penalizes individuals with decentralized squares
 totalAreaBySigXY = lambda areas,xs,ys: sum(areas) * numpy.std(xs) * numpy.std(ys)
 
@@ -54,7 +98,7 @@ for i in range(SETS):
   # create the best worst case solution i.e., a sqaure located
   # at the bottom-left most point and scaled such that it
   # encloses all other points.
-  outputs[i] = [(inputs[i][j][0],inputs[i][j][1],1) for j in range(NPOINTS)]
+  outputs[i] = [[inputs[i][j][0],inputs[i][j][1],1] for j in range(NPOINTS)]
   print("OUTPUT:",end="\t")
   print(outputs[i])
 
@@ -71,6 +115,9 @@ pset = gp.PrimitiveSetTyped("MAIN",input_types,output_types,prefix="IN")
 #   higher scoring solution.
 # - scale a square within the set of squares
 # - shift a square within the set of squares
+pset.addPrimitive(insert_unit_square, [[[float,float,int]],[float,float]], [[float,float,int]])
+pset.addPrimitive(scale_unit_square, [[[float,float,int]],int,int], [[float,float,int]])
+pset.addPrimitive(shift_unit_square, [[[float,float,int]],int,[float,float]], [[float,float,int]])
 # - if/else or for loop that performs one of
 #   the other operations based on whether
 #   all points are covered by the current
@@ -95,7 +142,8 @@ toolbox.register("compile", gp.compile, pset=pset)
 # - difference between indiv and worst case sum square areas / std of square coordinates
 def evaluateMinArea(individual):
   func = toolbox.compile(expr=individual)
-  return sum(abs(averageArea(func(*in_)) - averageArea(out)) for in_, out in zip(inputs, outputs)),
+  # accumulate the absolute differences between output from compiled individual with worstcase output
+  return sum(abs(averageArea(func(*in_)) - averageArea(out)) for in_, out in zip(inputs, outputs))
 
 toolbox.register("evaluate", evaluateMinArea)
 toolbox.register("select", tools.selTournament, tournsize=7)
