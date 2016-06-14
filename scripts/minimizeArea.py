@@ -1,4 +1,4 @@
-#!/usr/python2.7
+#!/usr/bin/python2.7
 
 """
 This script implements a toy problem that we will use to
@@ -22,16 +22,37 @@ from deap import creator
 from deap import tools
 from deap import gp
 
-# - if/else or for loop that performs one of
-#   the other operations based on whether
-#   all points are covered by the current
-#   set of squares.
-# operations that make up a population member
+# run one of two functions based on condition
 def if_then_else(condition, out1, out2):
   """
-  (bool, )
+  (bool, functools.partial, functools.partial) -> None
   """
-  return out1 if condition else out2
+  out1() if condition else out2()
+  return
+
+# define a class describing the problem
+# members:
+#   --input data--
+#   set of points ([[double,double]])
+#   --properties--
+#   iscovered ([bool])(indices correspond to points in set of points)
+#   total area (int)
+#   --output data--
+#   set of squares ([[double,double,int]])
+# methods:
+#   --validationMethods--
+#   covers_point() -> bool
+#   --modificationMethods--
+#   insertSquare(pointSelectionMethod) -> None
+#   scaleSquare(squareSelectionMethod, scalar) -> None
+#   --selectionMethods--
+#   randomPoint() -> [double,double]
+#   minPoint() -> [double,double]
+#   randomSquare() -> int
+#   minSquare() -> int
+#   randomScale() -> int
+#   --outputGeneration--
+#   buildSet() -> None
 def insert_unit_square(squares,xy):
   """
   ([[double,double,int]],[double,double]) -> [[double,double,int]]
@@ -67,13 +88,13 @@ def shift_square(squares,index,dxdy):
 # Initialize problem input and output vectors
 NPOINTS = 3
 POINT_RANGE = (-10,10)
-MSQUARES = 1
+MAX_SQUARES = sum(numpy.ceil(numpy.abs(POINT_RANGE)))**2
 # later, we generate a set of N points of size SETS
 SETS = 10
 # input : [[p0x,p0y],...,[pNx,pNy]]
 inputs = [[None]] * SETS
 # output : [S0,...,SM] where S = [xleft,ybottom,length]
-outputs = [[None]] * SETS
+# outputs = [[None]] * SETS
 
 # initialize input and output
 random.seed(10)
@@ -81,50 +102,40 @@ random.seed(10)
 # ((int,int)) -> ([double,double])
 randomXY = lambda rangeXY: [random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1])]
 # potential fitness functions - a lower score from these functions is better
-# ([[double,double,int]]) -> (double)
-# rewards individuals with lots of squares
-averageArea = lambda squares: sum(squares[i][2] for i in range(len(squares))) / len(squares)
-# ([double],[double],[double]) -> (double)
-# penalizes individuals with decentralized squares
-totalAreaBySigXY = lambda areas,xs,ys: sum(areas) * numpy.std(xs) * numpy.std(ys)
 
 for i in range(SETS):
   # input - select random x and y in point range
   inputs[i] = [randomXY(POINT_RANGE) for j in range(NPOINTS)]
-  print("INPUT:",end="\t")
-  print(inputs[i])
+  print ("INPUT:")#, end="\t")
+  print (inputs[i])
 
-  # (!) for now just use unit squares located at the points or
-  # create the best worst case solution i.e., a sqaure located
-  # at the bottom-left most point and scaled such that it
-  # encloses all other points.
-  outputs[i] = [[inputs[i][j][0],inputs[i][j][1],1] for j in range(NPOINTS)]
-  print("OUTPUT:",end="\t")
-  print(outputs[i])
+  # output - no need to generate an optimal solution for comparison.
+  # Instead, we use the ratio between points covered and total area vs. 1.
+  # outputs[i] = [[inputs[i][j][0],inputs[i][j][1],1] for j in range(NPOINTS)]
+  # print ("OUTPUT:")#, end="\t")
+  # print (outputs[i])
 
-  if(i == SETS-1): print("init completed")
+  if(i == SETS-1): print ("init completed")
 
 import itertools
-input_types = [itertools.repeat((float,float),NPOINTS)]*SETS
-output_types = itertools.repeat(list,SETS)
-pset = gp.PrimitiveSetTyped("MAIN",input_types,output_types,prefix="IN")
+# (!) PrimitiveSetTyped cannot accept nest lists or itertools.repeat
+input_types = itertools.repeat(list,NPOINTS) # expect [[float,float]]*NPOINTS
+# output_types = itertools.repeat(list,SETS) # expect [[float,float,int]]*variablesize
+
+pset = gp.PrimitiveSetTyped("MAIN"
+  , input_types
+  , None #output_types
+  , "IN")
+
 # (TODO) add terminals and primitives TYPED
 # operations:
-# - insert unit square to the set of squares *this op allows us to
-#   add in a new set of parameters that contribute to a potentially
-#   higher scoring solution.
-# - scale a square within the set of squares
-# - shift a square within the set of squares
-pset.addPrimitive(insert_unit_square, [[[float,float,int]],[float,float]], [[float,float,int]])
-pset.addPrimitive(scale_unit_square, [[[float,float,int]],int,int], [[float,float,int]])
-pset.addPrimitive(shift_unit_square, [[[float,float,int]],int,[float,float]], [[float,float,int]])
-# - if/else or for loop that performs one of
-#   the other operations based on whether
-#   all points are covered by the current
-#   set of squares.
+def somefunc(alist):
+  return alist
+pset.addPrimitive(somefunc, [list,list], list)
 # terminals:
+# pset.addTerminal()
 
-pset.addPrimitive(if_then_else, 3)
+# pset.addPrimitive(if_then_else, 3)
 
 # (?) we may need to play around with the weights here
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -138,12 +149,11 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=pset)
 
 # (TODO) The following may make good fitness functions:
-# - difference between indiv and worst case sum square areas / number of squares
-# - difference between indiv and worst case sum square areas / std of square coordinates
+# - points covered / total area >= 1 is a good score. If a solution breaks this threshold, stop.
 def evaluateMinArea(individual):
   func = toolbox.compile(expr=individual)
   # accumulate the absolute differences between output from compiled individual with worstcase output
-  return sum(abs(averageArea(func(*in_)) - averageArea(out)) for in_, out in zip(inputs, outputs))
+  return
 
 toolbox.register("evaluate", evaluateMinArea)
 toolbox.register("select", tools.selTournament, tournsize=7)
