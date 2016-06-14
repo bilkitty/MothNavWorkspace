@@ -15,6 +15,7 @@ import operator
 import random
 import numpy
 import math
+import sys
 
 from deap import algorithms
 from deap import base
@@ -22,15 +23,37 @@ from deap import creator
 from deap import tools
 from deap import gp
 
-# run one of two functions based on condition
+"""
+Helper functions
+"""
+# conditionally call one of two functions
 def if_then_else(condition, out1, out2):
   """
   (bool, functools.partial, functools.partial) -> None
   """
   out1() if condition else out2()
   return
+#   --selectionMethods--
+#   randomPoint() -> [double,double]
+#   randomScale() -> int
+random.seed(10)
+# Generates two random numbers in the point range; including endpoints.
+# ((int,int)) -> ([double,double])
+randomXY = lambda rangeXY: [random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1])]
+# Generates a random integer within the scalar range; including endpoints.
+# ((int,int)) -> (int)
+randomScalar = lambda rangeScalar: random.randint(rangeScalar[0],rangeScalar[1])
 
+"""
+Problem description:
+Given a set of points, find a set of squares that encloses them with
+minimal area. The squares are defined by lower-left corner and a size.
+The set can be expanded and individual squares can be scaled by integer
+values.
+"""
 # define a class describing the problem
+# (!) come up with a good name
+class problem(object):
 # members:
 #   --input data--
 #   set of points ([[double,double]])
@@ -39,92 +62,134 @@ def if_then_else(condition, out1, out2):
 #   total area (int)
 #   --output data--
 #   set of squares ([[double,double,int]])
+  def __init__(self,sets,npoints,max_squares,point_range):
+    """
+    (int,int,int,[double,double]) -> None
+    """
+    # init random input bound by point range
+    self.sets_of_points = numpy.array([[randomXY(point_range)
+      for j in range(npoints)]
+      for k in range(sets)],dtype=float)
+    # (!) debug
+    for i in range(sets):
+      print ("INPUT:")
+      print (sets_of_points[i])
+      if(i == sets-1): print ("init completed")
+    # init properties
+    self.iset = 0
+    self.total_area = 0
+    self.isCovered = numpy.zeros(sets_of_points.shape,dtype=bool)
+    self.max_squares = max_squares
+    # keep track of position within a set at the last index
+    self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
+
+
 # methods:
 #   --validationMethods--
 #   covers_point() -> bool
 #   --modificationMethods--
 #   insertSquare(pointSelectionMethod) -> None
 #   scaleSquare(squareSelectionMethod, scalar) -> None
-#   --selectionMethods--
-#   randomPoint() -> [double,double]
-#   minPoint() -> [double,double]
-#   randomSquare() -> int
-#   minSquare() -> int
-#   randomScale() -> int
-#   --outputGeneration--
-#   buildSet() -> None
-def insert_unit_square(squares,xy):
-  """
-  ([[double,double,int]],[double,double]) -> [[double,double,int]]
-  """
-  if (squares == None):
-    raise Exception("(!) insert_unit_square: squares is type 'None'.")
-  squares.append([xy[0],xy[1],1])
-  return squares
-def scale_square(squares,index,scalar):
-  """
-  ([[double,double,int]],int,int) -> [[double,double,int]]
-  """
-  if (scalar <= 0):
-    raise Exception("(!) scale_square: scalar <= 0.")
-  # only apply scalar to valid index
-  if (0 <= index and index < len(squares)):
-    squares[index][2] *= scalar
-  return squares
-def shift_square(squares,index,dxdy):
-  """
-  ([[double,double,int]],int,[double,double]) -> [[double,double,int]]
-  Shift the square at the given index by dxdy and return the modified set
-  of squares. dxdy is the difference in x and y between the source point
-  and destination. In other words, if the source locaiton is [a,b] and the
-  destination is [c,d] then dxdy is [a-c,b-d].
-  """
-  # only apply shift to valid index
-  if (0 <= index and index < len(squares)):
-    squares[index][0] -= dxdy[0]
-    squares[index][1] -= dxdy[1]
-  return squares
+#   nextSet() -> None
+  def next_set(self):
+    self.iset += 1
+    return
 
-# Initialize problem input and output vectors
+  def insert_unit_square(self):
+    """
+    (None) -> None
+    Adds a unit square to the ith set of squares. The location of the square
+    can either be random or a point defined by the min(x) and min(y) in the
+    set of points.
+    """
+    last_index = (int) self.sets_of_squares[self.iset][-1][0]
+    xy = numpy.array([0,0],dtype=float)
+    # choose a random or minimum xy location
+    # (?) what should be the deciding factor?
+
+    self.sets_of_squares[self.iset][last_index] = [xy[0],xy[1],1]
+    self.sets_of_squares[self.iset][-1][0] += 1
+    return
+
+# (!) consider passing the index for a square that can be scaled by scalar
+#     to cover a new point. i.e., throw out random/min square.
+  def scale_square(self,scalar):
+    """
+    (int) -> None
+    Scales either a random or minimum area square in the ith set of squares
+    by scalar.
+    """
+    index = 0
+    # choose a random or minimum area index to scale
+    # (?) what should be the deciding factor?
+
+    self.sets_of_squares[self.iset][index][2] *= scalar
+    return
+
+  #   --selectionMethods--
+  #   minPoint() -> [double,double]
+  #   randomSquare() -> int
+  #   (!) minSquare() -> int
+  # Returns the min x and y from the set of points
+  # None -> [double,double]
+  minPoint = lambda: [min(points[:,0]),min(points[:,1])]
+  # Generates a random integer within range of number of squares; including endpoints.
+  # (int) -> (int)
+  randomSquareIndex = lambda iset: random.randint(0,len(sets_of_squares[iset])-1)
+
+  def minSquare(self):
+    """
+    (int) -> (int)
+    Returns the index of the smallest square from the set of squares
+    (!) keep set of squares as a heap then we don't need this function.
+    """
+    min_square = 0
+    min_area = sys.maxsize
+    for i,s in enumerate(self.sets_of_squares[self.iset]):
+      if (s[2] < min_area):
+        min_square = i
+        min_area = s[2]
+    return min_square
+  #   --outputGeneration--
+  #   buildSet() -> None
+
+  # def shift_square(squares,index,dxdy):
+  #   """
+  #   ([[double,double,int]],int,[double,double]) -> [[double,double,int]]
+  #   Shift the square at the given index by dxdy and return the modified set
+  #   of squares. dxdy is the difference in x and y between the source point
+  #   and destination. In other words, if the source locaiton is [a,b] and the
+  #   destination is [c,d] then dxdy is [a-c,b-d].
+  #   """
+  #   # only apply shift to valid index
+  #   if (0 <= index and index < len(squares)):
+  #     squares[index][0] -= dxdy[0]
+  #     squares[index][1] -= dxdy[1]
+  #   return squares
+
+"""
+Initialize problem
+"""
 NPOINTS = 3
 POINT_RANGE = (-10,10)
-MAX_SQUARES = sum(numpy.ceil(numpy.abs(POINT_RANGE)))**2
-# later, we generate a set of N points of size SETS
 SETS = 10
-# input : [[p0x,p0y],...,[pNx,pNy]]
-inputs = [[None]] * SETS
-# output : [S0,...,SM] where S = [xleft,ybottom,length]
-# outputs = [[None]] * SETS
+MAX_SQUARES = sum(numpy.ceil(numpy.abs(POINT_RANGE)))**2
 
-# initialize input and output
-random.seed(10)
-# Generates two random numbers in the range; including endpoints.
-# ((int,int)) -> ([double,double])
-randomXY = lambda rangeXY: [random.uniform(rangeXY[0],rangeXY[1]),random.uniform(rangeXY[0],rangeXY[1])]
-# potential fitness functions - a lower score from these functions is better
+# set up problem; instantiate object
+# squareGenerator =
 
-for i in range(SETS):
-  # input - select random x and y in point range
-  inputs[i] = [randomXY(POINT_RANGE) for j in range(NPOINTS)]
-  print ("INPUT:")#, end="\t")
-  print (inputs[i])
-
-  # output - no need to generate an optimal solution for comparison.
-  # Instead, we use the ratio between points covered and total area vs. 1.
-  # outputs[i] = [[inputs[i][j][0],inputs[i][j][1],1] for j in range(NPOINTS)]
-  # print ("OUTPUT:")#, end="\t")
-  # print (outputs[i])
-
-  if(i == SETS-1): print ("init completed")
-
+"""
+Individual description:
+A program that generates a set of squares that may be a solution to the
+above problem.
+"""
 import itertools
 # (!) PrimitiveSetTyped cannot accept nest lists or itertools.repeat
-input_types = itertools.repeat(list,NPOINTS) # expect [[float,float]]*NPOINTS
-# output_types = itertools.repeat(list,SETS) # expect [[float,float,int]]*variablesize
-
+input_types = None
+output_types = None
 pset = gp.PrimitiveSetTyped("MAIN"
   , input_types
-  , None #output_types
+  , output_types
   , "IN")
 
 # (TODO) add terminals and primitives TYPED
@@ -151,6 +216,7 @@ toolbox.register("compile", gp.compile, pset=pset)
 # (TODO) The following may make good fitness functions:
 # - points covered / total area >= 1 is a good score. If a solution breaks this threshold, stop.
 def evaluateMinArea(individual):
+
   func = toolbox.compile(expr=individual)
   # accumulate the absolute differences between output from compiled individual with worstcase output
   return
