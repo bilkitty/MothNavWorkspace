@@ -3,4 +3,5 @@ data/*
 *.png
 */*.mtx
 */*.npy
+*/*.csv
 
