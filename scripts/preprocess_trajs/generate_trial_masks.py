@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import numpy as np
-from loadYoyoData import load_dataframe
+from fileio import load_dataframe
 import discretize
 import pickle
 import glob
