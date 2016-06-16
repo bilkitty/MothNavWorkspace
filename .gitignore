@@ -1,2 +1,6 @@
 data/*
-scripts/*.png
+*/*.png
+*.png
+*/*.mtx
+*/*.npy
+

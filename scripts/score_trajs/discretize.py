@@ -3,10 +3,48 @@
 import numpy as np
 import pandas as pd
 import sys
+import math
+from scipy.sparse import bsr_matrix
+
+PAD = 1  # patches are padded with PAD*max(tree radius)
+
+# inserts mat and point data to numpy array
+# so that it can be processed independently from
+# raw trajectory data.
+# if requested index is out of bounds, then the
+# boundary indices are overwritten.
+def pack(mat,data,ii,l):
+  if (ii < 0 or len(l) <= ii):
+    print("pack: warn: overwritting list data")
+  bounded_index = min(max(ii,0),len(l))
+  sparse_mat = bsr_matrix(mat).tobsr()
+  l[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
+  return
+
+# generates data frame slice of env objects
+# contained within a square around origin.
+# ARGS: origin (to center patch on), forest
+# RETURNS: tree patch, patch size (L/2 of
+# patch, not number of trees)
+def get_patch(orig,env):
+   patch_size = (int)(max(env.r)*(10 + PAD)) # floored
+   # includes trees whose radius is entirely contianed
+   # in the frame boundary
+   l = orig[0]-patch_size < env.x-env.r
+   r = env.x+env.r < orig[0]+patch_size
+   u = env.y+env.r < orig[1]+patch_size
+   d = orig[1]-patch_size < env.y-env.r
+   patch = env[l & r & u & d]
+   return [patch, patch_size]
 
 # computes matrix indices as ith-block and
 # jth-block between tcenter and origin.
 def map_to_mat_idx(tcenter,orig,bsize):
+  # avoid divide by zero or neg
+  if (bsize <= 0):
+    print("(!) map_to_mat_idx: invalid bsize "+str(bsize))
+    return (float('NaN'),float('NaN'))
+
   # use np arrays
   if(isinstance(orig,pd.Series)):
     orig = orig.values
@@ -23,13 +61,6 @@ def map_to_mat_idx(tcenter,orig,bsize):
 
   return (ii,jj)
 
-def keep_in_bounds(val,vmin,vmax):
-  if(val < vmin):
-    return vmin
-  if(vmax < val):
-    return vmax
-  return val
-
 # divide patch into min tree radius/2 sized
 # blocks and bin tree points into a matrix
 # MxM.
@@ -37,6 +68,7 @@ def keep_in_bounds(val,vmin,vmax):
 #   min(tree radius)
 # RETURNS: matrix MxM, block size, where
 #   M = 2*patch/block size (odd)
+#   returns block size = -1 if error
 def discretize(pt,patch,sz,rmin):
   # use np arrays
   if(isinstance(pt,pd.Series)):
@@ -47,7 +79,7 @@ def discretize(pt,patch,sz,rmin):
 
   if(rmin < 0):
     print("(!) Negative rmin")
-    return None
+    return [None,-1]
   # get block size
   SZb = rmin/2
 
@@ -57,45 +89,50 @@ def discretize(pt,patch,sz,rmin):
   Nb += (Nb+1)%2
   if(sys.maxsize < Nb):
     print("(!) outrageous mat size, block size is too small")
-    return None
+    return [None,-1]
 
   # init matrix that hold binary values
   mat = np.zeros((Nb,Nb),dtype=int)
-  min_idx = 0
-  max_idx = mat.shape[0]-1
 
-  # show moth block bm(0,0)
+  # mark moth block bm(0,0)
   mat[int(Nb/2)][int(Nb/2)] = -1
 
-  cnt = 1 #debug
   for tt in patch:
-     # get tree center
-     itt = map_to_mat_idx(tt,pt,SZb)
-     Mi = int(Nb/2)+itt[0];
-     Mj = int(Nb/2)+itt[1];
+    # get tree center (block size should be non-zero)
+    itt = map_to_mat_idx(tt,pt,SZb)
 
-     # convert tree radius to nblocks
-     rr = tt[2] # length from center to SIDE of sq = tradius
-     rb = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
+    # convert tree radius to nblocks
+    rr = tt[2] # length from center to EDGE of sq = tradius
+    rr2 = rr**2
+    rr_root2_by2 = (2**0.5)*rr / 2 # length from center to CORNER of sq = tradius
+    [rb,tmp] = map_to_mat_idx((tt[0]+rr,tt[1]),tt,SZb)
+    [rb_root2_by2,tmp] = map_to_mat_idx((tt[0]+rr_root2_by2,tt[1]),tt,SZb)
 
-     # set indices of mat[ti,tj] using mask
-     # handle trees partially cuttoff
-     xmin = keep_in_bounds(Mi - rb[0], min_idx, max_idx)
-     xmax = keep_in_bounds(Mi + rb[0], min_idx, max_idx)
-     ymin = keep_in_bounds(Mj - rb[0], min_idx, max_idx)
-     ymax = keep_in_bounds(Mj + rb[0], min_idx, max_idx)
+    # create a mask of 1's centered on tree
+    tsize = 2*rb + 1
+    mask = np.ones((tsize,tsize),dtype=int)
+    # trim mask
+    for i in range(0,tsize):
+      # offset defines the beginning of the range of columns to analyse
+      offset = 2*rb_root2_by2
+      if (i <= rb - rb_root2_by2 or rb + rb_root2_by2 <= i):
+        offset = 0
+      # check that distance from center to block is < tree radius
+      for j in range(0, rb - rb_root2_by2):
+        if (rr2 < ((i-rb)*SZb)**2 + ((j-rb)*SZb)**2):
+          mask[i][j] = 0
 
-     # create mask of ones over center+root(2)/2
-     xsize = xmax - xmin
-     ysize = ymax - ymin
-     mask = cnt*np.ones((xsize+1,ysize+1),dtype=int)
-     mask = mask.T
+      for j in range(rb - rb_root2_by2 + offset,tsize):
+        if (rr2 < ((i-rb)*SZb)**2 + ((j-rb)*SZb)**2):
+          mask[i][j] = 0
 
-     # apply mask over tree center (within boundaries of mat)
-     mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
-
-     # mark tree center (help see center of partically cuttoff tree)
-     if(not(Mi < 0 or Mj < 0 or Nb <= Mi or Nb <= Mj)):
-       mat[Mi][Mj] = -1
+    # apply mask over tree center (within boundaries of mat)
+    xmin,xmax = itt[0] - rb + int(Nb/2), itt[0] + rb + int(Nb/2)
+    ymin,ymax = itt[1] - rb + int(Nb/2), itt[1] + rb + int(Nb/2)
+    mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
+    # mark tree center
+    icenter = int(Nb/2)+itt[0];
+    jcenter = int(Nb/2)+itt[1];
+    mat[icenter][jcenter] = -1
 
   return [mat,SZb]

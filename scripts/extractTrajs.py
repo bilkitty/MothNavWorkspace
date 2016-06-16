@@ -2,7 +2,9 @@
 
 # returns dictionary of trajectories by start and end indices
 # key = 'f'+n, value = [range1,range2]
-def get_trajs(data,obst,speed,fmin,fmax,mid):
+def get_trajs(data,cond):
+   print(cond)
+   obst,speed,fmin,fmax,mid = cond[0],cond[1],cond[2],cond[3],cond[4]
    if('obstacles' in data.columns):
       obs_slice = data[sel_obstacle(data,obst)]
    else:

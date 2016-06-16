@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import numpy as np
 
 # displays plot if no filename is
 # specified otherwise save plot
@@ -17,6 +18,38 @@ def visualize(plt,filename):
    plt.close();
    return
 
+def init_axes():
+   fig = plt.figure()
+   ax = fig.add_subplot(111)
+   ax.set_axis_bgcolor('black')
+   return ax
+
+def plot_scores(scores,mid,tn,targ_file=None):
+   ax = init_axes()
+   n = len(scores)
+   # bar chart parameters
+   bar_idx = np.arange(n)
+   bar_width = 0.1
+   # use 10% of score range as pad
+   pad = 0.1*(max(scores) - min(scores))
+
+   # plot bars using alternating colors
+   even_frames = [scores[i] for i in range(0,n,2)]
+   odd_frames = [scores[i] for i in range(1,n,2)]
+
+   ax.bar(bar_idx[0::2], even_frames, color='c')
+   ax.bar(bar_idx[1::2], odd_frames, color='y')
+
+   plt.title("scores for "+mid+" t"+str(tn))
+   plt.xlabel("trajectory frame")
+   plt.xlim(-1,n+1)
+   plt.ylabel("score")
+   plt.ylim(min(scores)-pad,max(scores)+pad+1)
+
+   visualize(plt,targ_file)
+
+   return
+
 # displays plot of non-zero values
 # in matrix where each index represents
 # a block of size bsz. Please pass a
@@ -24,23 +57,27 @@ def visualize(plt,filename):
 # ARGS: matrix (sparse), block size,
 #   filename (optional)
 # RETURNS: void
-def plot_mat(mat,bsz,targ_file=None):
-   fig = plt.figure()
-   ax = fig.add_subplot(111)
-   ax.set_axis_bgcolor('black');
-
+def plot_mat(mat,bsz,kern=None,targ_file=None):
+   ax = init_axes()
    # get matrix shape
    szx = mat.shape[0]
    szy = mat.shape[1]
+   mark_size = bsz*100
+
+   if kern == None:
+      kern = np.ones((szx,szy),dtype=int)
 
    print("plotting mat("+str(szx)+"x"+str(szy)+")")
    for row in range(0,szx):
       for col in range(0,szy):
-         if mat[row][col] != 0:
-            if mat[row][col] < 0:
-               ax.scatter(row,col,s=bsz*100,c='b',marker='x')
-            else:
-               ax.scatter(row,col,s=bsz*100,c='r',marker='x')
+         # show centers of moth/trees
+         if mat[row][col] < 0:
+            ax.scatter(row,col,s=mark_size*kern[row][col],c='b',marker='x')
+         elif mat[row][col] > 0:
+            ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='x')
+         else:
+            continue
+
 
    plt.title("matrix (block_size="+str(round(bsz,5))
       +" msize="+str(round(bsz*szx,5))+")")
@@ -50,7 +87,7 @@ def plot_mat(mat,bsz,targ_file=None):
    plt.ylim(-1,szy)
 
    visualize(plt,targ_file)
-   return fig
+   return
 
 # displays objects in environment and
 # trajectory path. Pass a filename to
@@ -58,7 +95,7 @@ def plot_mat(mat,bsz,targ_file=None):
 # ARGS: trajectory, environment, file (opt)
 # RETURNS: void
 def plot(traj,env,targ_file=None):
-   ax = plt.figure().add_subplot(111)
+   ax = init_axes()
 
    print("plotting trees: "+str(len(env)))
    for tree in env.values:
@@ -83,6 +120,21 @@ def plot(traj,env,targ_file=None):
    visualize(plt,targ_file)
    return
 
+def plot_trees(env,targ_file=None):
+   ax = init_axes()
+
+   print("plotting trees: "+str(len(env)))
+   for tree in env.values:
+      ax.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
+
+   plt.xlabel("x")
+   plt.xlim(min(env.x),max(env.x))
+   plt.ylabel("y")
+   plt.ylim(min(env.y),max(env.y))
+
+   visualize(plt,targ_file)
+   return
+
 # displays objects in environment, patch,
 # and trajectory point. A box of length
 # 2*patch size is drawn to visually indicate
@@ -92,7 +144,7 @@ def plot(traj,env,targ_file=None):
 #  filename (opt)
 # RETURNS: void
 def plot_frame(pt,patch,size,env,targ_file=None):
-   ax = plt.figure().add_subplot(111)
+   ax = init_axes()
 
    print("plotting trees: "+str(len(env)))
    # plot trees outside of patch

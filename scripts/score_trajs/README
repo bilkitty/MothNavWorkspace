@@ -4,7 +4,7 @@ The main module can open either csv or hdf files. Since the traj and env data ar
 
 processing a traj/env pair:
   main.py <path_to_env_data> <path_to_traj_data>
-  
+
 dependencies:
   loadYoyoData.py
   discretize.py
