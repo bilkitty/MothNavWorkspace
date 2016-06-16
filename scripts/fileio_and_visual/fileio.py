@@ -31,7 +31,7 @@ def load_dataframe(file_format,file_path):
 
 def save_dataframe(data_frame,file_format,file_path):
    """
-   (str,str,pandas.dataframe) -> None
+   (pandas.dataframe,str,str) -> None
    Save a data frame according to file format (cvs or hdf) at the
    given file path. Throws if file path doesn't exist.
    """
