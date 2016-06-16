@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from loadYoyoData import load_data,save_data
+from fileio import load_data,save_data
 from plotStuff import plot_trees
 import numpy as np
 import math
