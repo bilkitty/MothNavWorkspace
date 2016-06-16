@@ -30,7 +30,7 @@ def score_frame(mask,kernel):
 # instead of ktype, pass kernel function (e.g., 2d gaussian function)
 def generateKernel(mask_data,means,stdevs,amplitude,rotate=False):
   """
-  (ndarray(ndarray,f4,f4,f4,f4)), (tuple(f4,f4)), (tuple(f4,f4)), (f4) -> (ndarray(ndarray))
+  (ndarray(ndarray,f4,f4,f4,f4), tuple(f4,f4), tuple(f4,f4), f4) -> ndarray(ndarray)
 
   Given N (masks,points,headings) and gaussian parameters (mean,stdev,amplitude),
   compute an NxN Gaussian kernel. Return an unrotated kernel by default and a

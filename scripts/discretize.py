@@ -3,55 +3,65 @@
 import numpy as np
 import pandas as pd
 import sys
-import math
 from scipy.sparse import bsr_matrix
 
 PAD = 1  # patches are padded with PAD*max(tree radius)
 
-# inserts mat and point data to numpy array
-# so that it can be processed independently from
-# raw trajectory data.
-# if requested index is out of bounds, then the
-# boundary indices are overwritten.
-def pack(mat,data,ii,l):
-  if (ii < 0 or len(l) <= ii):
+def pack(mat,data,ii,arr):
+  """
+  (ndarray,[double*(4)],int,ndarray)-> None
+  Converts a matrix to a sparse mat then creates a tuple containing
+  this sparse matrix and the elements from data list. This tuple is
+  inserted to the array at ii. We check that ii is within the bounds
+  of the array. If ii exceeds the boundaries of the array, then the
+  edges (i.e., 0 and len(array)-1) are overwritten; and a warning is
+  uttered.
+  """
+  if (ii < 0 or len(arr) <= ii):
     print("pack: warn: overwritting list data")
-  bounded_index = min(max(ii,0),len(l))
+  bounded_index = min(max(ii,0),len(arr))
   sparse_mat = bsr_matrix(mat).tobsr()
-  l[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
+  arr[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
   return
 
-# generates data frame slice of env objects
-# contained within a square around origin.
-# ARGS: origin (to center patch on), forest
-# RETURNS: tree patch, patch size (L/2 of
-# patch, not number of trees)
-def get_patch(orig,env):
-   patch_size = (int)(max(env.r)*(10 + PAD)) # floored
-   # includes trees whose radius is entirely contianed
-   # in the frame boundary
-   l = orig[0]-patch_size < env.x-env.r
-   r = env.x+env.r < orig[0]+patch_size
-   u = env.y+env.r < orig[1]+patch_size
-   d = orig[1]-patch_size < env.y-env.r
-   patch = env[l & r & u & d]
-   return [patch, patch_size]
+def get_patch(origin,env):
+  """
+  ([double*(2)],pandas.dataframe) -> [pandas.dataframe,int]
+  Returns a slice of the forest that is within a square
+  neighborhood, described as patch_size, about the origin.
+  The trees are included in the neighborhood if they entirely
+  fall in the boundary of the neighborhood. In other words,
+  all the tree's surface is within the square boundary.
+  """
+  patch_size = (int)(max(env.r)*(10 + PAD))
+  l = origin[0]-patch_size < env.x-env.r
+  r = env.x+env.r < origin[0]+patch_size
+  u = env.y+env.r < origin[1]+patch_size
+  d = origin[1]-patch_size < env.y-env.r
+  patch = env[l & r & u & d]
+  return [patch, patch_size]
 
 # computes matrix indices as ith-block and
 # jth-block between tcenter and origin.
-def map_to_mat_idx(tcenter,orig,bsize):
+def map_to_mat_idx(tcenter,origin,bsize):
+  """
+  (ndarray,ndarray,int) -> (int,int)
+  Computes the distance between tree center and
+  origin in units of block size. Since the origin
+  is meant to be at the center of an odd grid,
+  the distance is computed as a count of half
+  blocks. Then this count is converted to whole
+  blocks in the x and y direction and returned
+  as a tuple.
+  """
   # avoid divide by zero or neg
   if (bsize <= 0):
     print("(!) map_to_mat_idx: invalid bsize "+str(bsize))
     return (float('NaN'),float('NaN'))
 
-  # use np arrays
-  if(isinstance(orig,pd.Series)):
-    orig = orig.values
-
-  # get deltax, deltay of tree/moth
-  tx2px = tcenter[0] - orig[0]
-  ty2py = tcenter[1] - orig[1]
+  # get deltax, deltay
+  tx2px = tcenter[0] - origin[0]
+  ty2py = tcenter[1] - origin[1]
   # get half blocks between mcenter and tcenter
   ihalf = int( 2*tx2px/bsize ) # cols are x
   jhalf = int( 2*ty2py/bsize ) # rows are y
@@ -70,7 +80,7 @@ def map_to_mat_idx(tcenter,orig,bsize):
 #   M = 2*patch/block size (odd)
 #   returns block size = -1 if error
 def discretize(pt,patch,sz,rmin):
-  # use np arrays
+  # convert dataframes to numpy arrays
   if(isinstance(pt,pd.Series)):
     pt = pt.values
   if(isinstance(patch,pd.DataFrame)

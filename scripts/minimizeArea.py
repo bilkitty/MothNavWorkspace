@@ -78,7 +78,7 @@ class problem(object):
     # init properties
     self.iset = 0
     self.total_area = 0
-    self.isCovered = numpy.zeros(sets_of_points.shape,dtype=bool)
+    self.isCovered = numpy.zeros(npoints,dtype=bool)
     self.max_squares = max_squares
     # keep track of position within a set at the last index
     self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
@@ -87,12 +87,39 @@ class problem(object):
 # methods:
 #   --validationMethods--
 #   covers_point() -> bool
+  def covers_new_point(square):
+    """
+    (int) -> bool
+    Returns true if this square covers an uncovered point.
+    """
+    inbounds = numpy.array([True]*4)
+    for i,point in enumerate(self.sets_of_points[self.iset]):
+      if (self.isCovered[i] == 1):
+        continue
+
+      if (inbounds == [point - square[:2],square[:2]+[square[2]]*2 - point]):
+        return True
+
+    return False
+
+
 #   --modificationMethods--
 #   insertSquare(pointSelectionMethod) -> None
 #   scaleSquare(squareSelectionMethod, scalar) -> None
-#   nextSet() -> None
+#   refresh() -> None
+#   next_set() -> None
   def next_set(self):
-    self.iset += 1
+
+    self.isCovered = numpy.zeros(self.sets_of_points.shape,dtype=bool)
+    return
+
+  def refresh(self):
+    # init properties
+    self.iset = 0
+    self.total_area = 0
+    self.isCovered = numpy.zeros(self.sets_of_points.shape[0],dtype=bool)
+    # keep track of position within a set at the last index
+    self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
     return
 
   def insert_unit_square(self):
@@ -102,7 +129,7 @@ class problem(object):
     can either be random or a point defined by the min(x) and min(y) in the
     set of points.
     """
-    last_index = (int) self.sets_of_squares[self.iset][-1][0]
+    last_index = (int)(self.sets_of_squares[self.iset][-1][0])
     xy = numpy.array([0,0],dtype=float)
     # choose a random or minimum xy location
     # (?) what should be the deciding factor?
@@ -132,10 +159,12 @@ class problem(object):
   #   (!) minSquare() -> int
   # Returns the min x and y from the set of points
   # None -> [double,double]
-  minPoint = lambda: [min(points[:,0]),min(points[:,1])]
+  def minPoint(self):
+    return [min(self.sets_of_points[self.iset][:,0]),min(self.sets_of_points[self.iset][:,1])]
   # Generates a random integer within range of number of squares; including endpoints.
-  # (int) -> (int)
-  randomSquareIndex = lambda iset: random.randint(0,len(sets_of_squares[iset])-1)
+  # (None) -> (int)
+  def randomSquareIndex(self):
+    return random.randint(0,len(self.sets_of_squares[self.iset])-1)
 
   def minSquare(self):
     """
@@ -152,6 +181,17 @@ class problem(object):
     return min_square
   #   --outputGeneration--
   #   buildSet() -> None
+  def buildSetsOfSquares(self,build_routine):
+    """
+    (None) -> None
+    Given a function, generate a set of squares for each set of points.
+    """
+    # refresh problem
+    while (self.iset < len(self.sets_of_points)):
+      # run the routine
+      build_routine()
+      self.iset += 1
+    return
 
   # def shift_square(squares,index,dxdy):
   #   """
@@ -183,10 +223,8 @@ Individual description:
 A program that generates a set of squares that may be a solution to the
 above problem.
 """
-import itertools
-# (!) PrimitiveSetTyped cannot accept nest lists or itertools.repeat
-input_types = None
-output_types = None
+input_types = [problem]
+output_types = problem
 pset = gp.PrimitiveSetTyped("MAIN"
   , input_types
   , output_types
@@ -197,7 +235,7 @@ pset = gp.PrimitiveSetTyped("MAIN"
 def somefunc(alist):
   return alist
 pset.addPrimitive(somefunc, [list,list], list)
-# terminals:
+# # terminals:
 # pset.addTerminal()
 
 # pset.addPrimitive(if_then_else, 3)
