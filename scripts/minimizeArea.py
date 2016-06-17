@@ -80,7 +80,7 @@ class problem(object):
     self.total_area = 0
     self.isCovered = numpy.zeros(npoints,dtype=bool)
     self.max_squares = max_squares
-    # keep track of position within a set at the last index
+    # --(!) sets_of_squares[iset][-1] holds a count of squares in the set.
     self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
 
 
@@ -109,11 +109,21 @@ class problem(object):
 #   refresh() -> None
 #   next_set() -> None
   def next_set(self):
-
-    self.isCovered = numpy.zeros(self.sets_of_points.shape,dtype=bool)
+    """
+    (None) -> None
+    Advances to the next set by incrementing the self.iset and resetting
+    self.isCovered.
+    """
+    npoints = len(self.sets_of_points[0])
+    self.iset += 1
+    self.isCovered = numpy.zeros(npoints,dtype=bool)
     return
 
   def refresh(self):
+    """
+    (None) -> None
+    Resets self.(iset,total_area,isCovered,sets_of_squares) to zero.
+    """
     # init properties
     self.iset = 0
     self.total_area = 0
@@ -135,6 +145,7 @@ class problem(object):
     # (?) what should be the deciding factor?
 
     self.sets_of_squares[self.iset][last_index] = [xy[0],xy[1],1]
+    # The last index in ith sets_of_squares holds a count of squares in the set.
     self.sets_of_squares[self.iset][-1][0] += 1
     return
 
@@ -157,14 +168,22 @@ class problem(object):
   #   minPoint() -> [double,double]
   #   randomSquare() -> int
   #   (!) minSquare() -> int
-  # Returns the min x and y from the set of points
-  # None -> [double,double]
   def minPoint(self):
+    """
+    (None)-> [double,double]
+    Finds and returns the minimum x component and minimum y component from
+    the ith set of (x,y) points.
+    """
     return [min(self.sets_of_points[self.iset][:,0]),min(self.sets_of_points[self.iset][:,1])]
-  # Generates a random integer within range of number of squares; including endpoints.
-  # (None) -> (int)
   def randomSquareIndex(self):
-    return random.randint(0,len(self.sets_of_squares[self.iset])-1)
+    """
+    (None) -> (int)
+    Returns a random integer value within the range of the total number of
+    squares in the ith set of squares.
+    """
+    # The last index in ith sets_of_squares holds a count of squares in the set.
+    total_squares = self.sets_of_squares[self.iset][-1][0]
+    return random.randint(0,total_squares)
 
   def minSquare(self):
     """
@@ -254,9 +273,20 @@ toolbox.register("compile", gp.compile, pset=pset)
 # (TODO) The following may make good fitness functions:
 # - points covered / total area >= 1 is a good score. If a solution breaks this threshold, stop.
 def evaluateMinArea(individual):
+  """
+  (creator.Individual) -> (double)
+  Compile a primitive tree that describes an individual into runnable python code.
+  Execute the code to modify class problem. Analyse the class to produce a score
+  that reflects how successfully the set of squares covers the set of points.
+  for each set:
+    nPoints = count number of True in isCovered
+    totalArea = sum of areas in set of squares
+    accumScore = nPoints/totalArea
+  score = accumScore/nSets
+  """
 
   func = toolbox.compile(expr=individual)
-  # accumulate the absolute differences between output from compiled individual with worstcase output
+
   return
 
 toolbox.register("evaluate", evaluateMinArea)
@@ -266,7 +296,11 @@ toolbox.register("expr_mut", gp.genGrow, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
 def main():
-
+  """
+  Generate an initial population. Specify a set of statistics that will be reported to
+  stdout. Run a simple evolutionary algorithm and return the final population, the stats,
+  and (what is halloffame?).
+  """
   pop = toolbox.population(n=40)
   hof = tools.HallOfFame(1)
   stats = tools.Statistics(lambda ind: ind.fitness.values)
