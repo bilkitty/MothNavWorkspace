@@ -24,8 +24,7 @@ def load_dataframe(file_format,file_path):
    (1000, 3)
    """
    if(not os.path.isfile(file_path)):
-      print("(!) ERROR: "+file_path+" does not exist.")
-      return None
+      raise FileNotFoundError("(!) ERROR: {:s} does not exist.".format(file_path))
 
    print("loading: "+file_path)
    dt = None
@@ -62,7 +61,7 @@ def save_dataframe(data_frame,file_format,file_path):
    filename = file_path.split('/')[-1]
    file_location = file_path.replace(filename,"")
    if (not os.path.exists(file_location)):
-      raise NotADirectoryError("(!) You passed a filepath with non existant directory.")
+      raise NotADirectoryError("(!) ERROR: {:s} does not exist.".format(file_location))
 
    if (file_format == 'csv'):
       try:
