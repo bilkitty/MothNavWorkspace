@@ -10,6 +10,7 @@ PAD = 1  # patches are padded with PAD*max(tree radius)
 def pack(mat,data,ii,arr):
   """
   (ndarray,[double*(4)],int,ndarray)-> None
+
   Converts a matrix to a sparse mat then creates a tuple containing
   this sparse matrix and the elements from data list. This tuple is
   inserted to the array at ii. We check that ii is within the bounds
@@ -27,8 +28,9 @@ def pack(mat,data,ii,arr):
 def get_patch(origin,env):
   """
   ([double*(2)],pandas.dataframe) -> [pandas.dataframe,int]
+
   Returns a slice of the forest that is within a square
-  neighborhood, described as patch_size, about the origin.
+  neighborhood, described by patch_size*2, about the origin.
   The trees are included in the neighborhood if they entirely
   fall in the boundary of the neighborhood. In other words,
   all the tree's surface is within the square boundary.
@@ -46,6 +48,7 @@ def get_patch(origin,env):
 def map_to_mat_idx(tcenter,origin,bsize):
   """
   (ndarray,ndarray,int) -> (int,int)
+
   Computes the distance between tree center and
   origin in units of block size. Since the origin
   is meant to be at the center of an odd grid,
