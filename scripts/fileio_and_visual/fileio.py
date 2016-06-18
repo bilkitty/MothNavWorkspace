@@ -12,14 +12,14 @@ def load_dataframe(file_format,file_path):
    or file file_format is not csv or h5, then return None.
 
    Examples:
-   >>> filepath = "/home/bilkit/Dropbox/moth_nav_analysis/data/single_trials/moth1_448f0.h5"
+   >>> filepath = os.getcwd()+"/test/test.h5"
    >>> fileformat = "h5"
    >>> datah5 = load_dataframe(fileformat,filepath)
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/data/single_trials/moth1_448f0.h5
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/test.h5
    >>> datah5.shape
-   (3454, 13)
-   >>> datacsv = load_dataframe("csv","/home/bilkit/Dropbox/moth_nav_analysis/data/forests/forest.csv")
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/data/forests/forest.csv
+   (1000, 3)
+   >>> datacsv = load_dataframe("csv","/home/bilkit/Dropbox/moth_nav_analysis/scripts/test/test.csv")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/test.csv
    >>> datacsv.shape
    (1000, 3)
    """
@@ -28,7 +28,7 @@ def load_dataframe(file_format,file_path):
       return None
 
    print("loading: "+file_path)
-
+   dt = None
    if(file_format == 'csv'):
       dt = pd.read_csv(file_path,delimiter=',')
    elif(file_format == 'h5'):
@@ -42,7 +42,6 @@ def load_dataframe(file_format,file_path):
 
    else:
       print("(!) load_data: file file_format, "+file_format+", is unrecognized.")
-      dt = None
 
 
    return dt
@@ -55,18 +54,21 @@ def save_dataframe(data_frame,file_format,file_path):
    given file path. The data is saved without an index. If file
    path doesn't exist then an exception is thrown.
 
-   >>> datacsv = load_dataframe("csv","/home/bilkit/Dropbox/moth_nav_analysis/data/forests/forest.csv")
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/data/forests/forest.csv
-   >>> save_dataframe(datacsv,"csv",os.getcwd()+"/test.csv")
-   >>> save_dataframe(datacsv,"h5",os.getcwd()+"/test.h5")
+   >>> datacsv = load_dataframe("csv","/home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+   >>> save_dataframe(datacsv,"csv",os.getcwd()+"/test/test.csv")
+   >>> save_dataframe(datacsv,"h5",os.getcwd()+"/test/test.h5")
    """
    filename = file_path.split('/')[-1]
    file_location = file_path.replace(filename,"")
    if (not os.path.exists(file_location)):
-      raise EXCEPTION("Filepath doesn't exist")
+      raise NotADirectoryError("(!) You passed a filepath with non existant directory.")
 
    if (file_format == 'csv'):
-      data_frame.to_csv(file_path,index=False)
+      try:
+         data_frame.to_csv(file_path,index=False)
+      except OSError:
+         print("(!) You passed a directory path instead of a file path.")
    elif (file_format == 'h5'):
       filename = file_path.split('/')[-1]
       # replace default key with filename
@@ -75,7 +77,10 @@ def save_dataframe(data_frame,file_format,file_path):
          key = filename.split('.')[0]
       else:
          print("(!) Saving {:s} with key={:s}".format(file_path,key))
-      data_frame.to_hdf(file_path,key=key)
+      try:
+         data_frame.to_hdf(file_path,key=key)
+      except OSError:
+         print("(!) You passed a directory path instead of a file path.")
    else:
       print("(!) save_data: file file_format, "+file_format+", is unrecognized.")
 
