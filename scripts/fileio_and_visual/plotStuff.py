@@ -53,14 +53,29 @@ def plot_scores(scores,mid,tn,targ_file=None):
 
    return
 
-# displays plot of non-zero values
-# in matrix where each index represents
-# a block of size bsz. Please pass a
-# sparse matrix.
-# ARGS: matrix (sparse), block size,
-#   filename (optional)
-# RETURNS: void
 def plot_mat(mat,bsz,kern=None,targ_file=None):
+   """
+   (numpy.array,int,numpy.array,str) -> None
+
+   Plots and displays or saves a 2-D matrix. If a target file is specified,
+   then the plot is saved as targ_file. If a kernel (2-D matrix) is given,
+   then the marker size representing a value in the mat is scaled by the
+   corresponding value in the kernel.
+
+   >>> from fileio import load_dataframe
+   >>> from discretize import get_patch, discretize
+   >>> import os, sys
+   >>> dump = os.getcwd()+"/test"
+   >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
+   >>> point = traj[["pos_x","pos_y"]].iloc[400]
+   >>> trees = load_dataframe("csv",dump+"/trees.csv")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+   >>> patch,size = get_patch(point,trees)
+   >>> [mask, bsize] = discretize(point,patch,size,min(trees.r))
+   >>> plot_mat(mask,bsize,targ_file=dump+"/mat.png")
+   plotting mat(111x111)
+   """
    ax = init_axes()
 
    # get matrix shape
@@ -78,7 +93,7 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
          if mat[row][col] < 0:
             ax.scatter(row,col,s=mark_size*kern[row][col],c='b',marker='x')
          elif mat[row][col] > 0:
-            ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='x')
+            ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='^')
          else:
             continue
 
@@ -120,7 +135,7 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
    >>> visualize(dump+"/traj.png")
    """
    print("plotting pts: "+str(len(traj)))
-   axes.scatter(traj.pos_x,traj.pos_y,size=5,color='red',marker='.')
+   axes.scatter(traj.pos_x,traj.pos_y,s=5,color='red',marker='.')
 
    if (not add_to_axes):
       # label figure with moth id and obstacle type
