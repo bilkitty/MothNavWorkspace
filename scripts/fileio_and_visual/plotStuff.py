@@ -104,22 +104,23 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
 
    >>> from fileio import load_dataframe
    >>> import os, sys
-   >>> traj = load_dataframe("h5",os.getcwd()+"/test/moth1_448f0.h5")
+   >>> dump = os.getcwd()+"/test"
+   >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
    >>> ax = init_axes("white")
-   >>> plot_traj(ax,traj)
+   >>> plot_traj(ax,traj,targ_file=dump+"/traj.png")
    plotting pts: 3454
-   >>> ax = init_axes()
+   >>> ax = init_axes("white")
    >>> plot_traj(ax,traj,add_to_axes=True)
    plotting pts: 3454
    >>> sys.stdout = plt.xlabel("x")
    >>> sys.stdout = plt.xlim(min(traj.pos_x),max(traj.pos_x))
    >>> sys.stdout = plt.ylabel("y")
    >>> sys.stdout = plt.ylim(min(traj.pos_y),max(traj.pos_y))
-   >>> visualize(os.getcwd()+"/test/traj.png")
+   >>> visualize(dump+"/traj.png")
    """
    print("plotting pts: "+str(len(traj)))
-   axes.scatter(traj.pos_x,traj.pos_y,s=5,c='r',marker='.')
+   axes.scatter(traj.pos_x,traj.pos_y,size=5,color='red',marker='.')
 
    if (not add_to_axes):
       # label figure with moth id and obstacle type
@@ -149,24 +150,28 @@ def plot_trees(axes,trees,trees_to_ignore=None,add_to_axes=False,targ_file=None)
 
    >>> from fileio import load_dataframe
    >>> import os, sys
-   >>> trees = load_dataframe("csv",os.getcwd()+"/test/trees.csv")
+   >>> dump = os.getcwd()+"/test"
+   >>> trees = load_dataframe("csv",dump+"/trees.csv")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
    >>> ax = init_axes()
-   >>> plot_trees(ax,trees)
+   >>> plot_trees(ax,trees,targ_file=dump+"/trees.png")
    plotting trees: 1000
    >>> ax = init_axes()
-   >>> plot_trees(ax,trees,add_to_axes=False)
+   >>> plot_trees(ax,trees,add_to_axes=True)
    plotting trees: 1000
    >>> sys.stdout = plt.xlabel("x")
    >>> sys.stdout = plt.xlim(min(trees.x),max(trees.x))
    >>> sys.stdout = plt.ylabel("y")
    >>> sys.stdout = plt.ylim(min(trees.y),max(trees.y))
-   >>> visualize(os.getcwd()+"/test/trees.png")
+   >>> visualize(dump+"/trees.png")
    """
+
    print("plotting trees: "+str(len(trees)))
    for tree in trees.values:
-      if (not(trees_to_ignore == None or tree in trees_to_ignore)):
-         axes.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
+      if (trees_to_ignore != None and tree in trees_to_ignore):
+         continue
+
+      axes.add_patch(plt.Circle((tree[0],tree[1]),tree[2],color='g'))
 
    # save or display the plot if it is last
    if (not add_to_axes):
@@ -180,14 +185,6 @@ def plot_trees(axes,trees,trees_to_ignore=None,add_to_axes=False,targ_file=None)
       visualize(targ_file)
    return
 
-# displays objects in environment, patch,
-# and trajectory point. A box of length
-# 2*patch size is drawn to visually indicate
-# patch boundary. Pass a filename to save
-# the figure.
-# ARGS: point, patch, patch size, env
-#  filename (opt)
-# RETURNS: void
 def plot_forest_patch(axes,pt,forest_patch,size,add_to_axes=False,targ_file=None):
    """
    (matplotlib.axes.AxesSubplot,pandas.dataframe,pandas.Series,int,bool,str) -> None
@@ -202,19 +199,20 @@ def plot_forest_patch(axes,pt,forest_patch,size,add_to_axes=False,targ_file=None
    >>> from fileio import load_dataframe
    >>> from discretize import get_patch
    >>> import os, sys
-   >>> trees = load_dataframe("csv",os.getcwd()+"/test/trees.csv")
+   >>> dump = os.getcwd()+"/test"
+   >>> trees = load_dataframe("csv",dump+"/trees.csv")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
-   >>> traj = load_dataframe("h5",os.getcwd()+"/test/moth1_448f0.h5")
+   >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
    >>> point = traj[["pos_x","pos_y"]].iloc[400]
    >>> patch,size = get_patch(point,trees)
    >>> ax = init_axes()
-   >>> plot_forest_patch(ax,point,patch,size)
+   >>> plot_forest_patch(ax,point,patch,size,targ_file=dump+"/forest_patch_only.png")
    plotting forest_patch: 1
    >>> ax = init_axes()
    >>> plot_forest_patch(ax,point,patch,size,add_to_axes=True)
    plotting forest_patch: 1
-   >>> plot_trees(ax,trees,trees_to_ignore=patch)
+   >>> plot_trees(ax,trees,trees_to_ignore=patch.values,targ_file=dump+"/tree_with_forest_patch.png")
    plotting trees: 1000
    """
    print("plotting forest_patch: "+str(len(forest_patch)))
@@ -243,7 +241,6 @@ def plot_forest_patch(axes,pt,forest_patch,size,add_to_axes=False,targ_file=None
       plt.ylim(pt.pos_y-size,pt.pos_y+size)
 
       visualize(targ_file)
-
    return
 
 """ DOC TESTS """
