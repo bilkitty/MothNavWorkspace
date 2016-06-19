@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-# displays plot if no filename is
-# specified otherwise save plot
-# using file arg
-# ARGS: plot, filename
-# RETURNS: void
 def visualize(filename):
+   """
+   (str) -> None
+
+   Saves the current figure if filename is specified, or displays it
+   otherwise.
+   """
    if(filename == None):
       plt.show()
    else:
@@ -18,16 +19,33 @@ def visualize(filename):
    plt.close()
    return
 
-def init_axes(bgcolor="black"):
+def init_axes(bgcolor="white"):
    """
-   (None) -> matplotlib.axes.AxesSubplot
+   (str) -> matplotlib.axes.AxesSubplot
+
+   Creates a figure and subplot with a specified background color. by
+   default, the background is white. The configured subplot is returned.
    """
    fig = plt.figure()
    ax = fig.add_subplot(111)
    ax.set_axis_bgcolor(bgcolor)
    return ax
 
-def plot_scores(scores,mid,tn,targ_file=None):
+def plot_scores(scores,mothid,trial_count,targ_file=None):
+   """
+   (numpy.array,str,int,str) -> None
+
+   Plots and displays or saves an array of doubles. If a target file is
+   specified, then the plot is saved as targ_file. The mothid and trial
+   count are used to label the plot of scores.
+
+   >>> import numpy, os
+   >>> dump = os.getcwd()+"/test"
+   >>> mid = 'moth1'
+   >>> tcnt = 0
+   >>> scores = numpy.array([float(i) for i in range(20)])
+   >>> plot_scores(scores,mid,tcnt,targ_file=dump+"/scores.png")
+   """
    ax = init_axes()
    n = len(scores)
    # bar chart parameters
@@ -43,7 +61,7 @@ def plot_scores(scores,mid,tn,targ_file=None):
    ax.bar(bar_idx[0::2], even_frames, color='c')
    ax.bar(bar_idx[1::2], odd_frames, color='y')
 
-   plt.title("scores for "+mid+" t"+str(tn))
+   plt.title("scores for "+mothid+" t"+str(trial_count))
    plt.xlabel("trajectory frame")
    plt.xlim(-1,n+1)
    plt.ylabel("score")
@@ -64,7 +82,7 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
 
    >>> from fileio import load_dataframe
    >>> from discretize import get_patch, discretize
-   >>> import os, sys
+   >>> import os
    >>> dump = os.getcwd()+"/test"
    >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
@@ -76,7 +94,8 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
    >>> plot_mat(mask,bsize,targ_file=dump+"/mat.png")
    plotting mat(111x111)
    """
-   ax = init_axes()
+   # use black background to represent zero values
+   ax = init_axes("black")
 
    # get matrix shape
    szx = mat.shape[0]
@@ -93,7 +112,8 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
          if mat[row][col] < 0:
             ax.scatter(row,col,s=mark_size*kern[row][col],c='b',marker='x')
          elif mat[row][col] > 0:
-            ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='^')
+            # not sure why, but only marker x will display properly
+            ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='x')
          else:
             continue
 
@@ -122,10 +142,10 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
    >>> dump = os.getcwd()+"/test"
    >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
-   >>> ax = init_axes("white")
+   >>> ax = init_axes()
    >>> plot_traj(ax,traj,targ_file=dump+"/traj.png")
    plotting pts: 3454
-   >>> ax = init_axes("white")
+   >>> ax = init_axes()
    >>> plot_traj(ax,traj,add_to_axes=True)
    plotting pts: 3454
    >>> sys.stdout = plt.xlabel("x")
@@ -213,7 +233,7 @@ def plot_forest_patch(axes,pt,forest_patch,size,add_to_axes=False,targ_file=None
 
    >>> from fileio import load_dataframe
    >>> from discretize import get_patch
-   >>> import os, sys
+   >>> import os
    >>> dump = os.getcwd()+"/test"
    >>> trees = load_dataframe("csv",dump+"/trees.csv")
    loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
