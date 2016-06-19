@@ -112,7 +112,7 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
          if mat[row][col] < 0:
             ax.scatter(row,col,s=mark_size*kern[row][col],c='b',marker='x')
          elif mat[row][col] > 0:
-            # not sure why, but only marker x will display properly
+            # not sure why, but only marker x will display properly...
             ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='x')
          else:
             continue
