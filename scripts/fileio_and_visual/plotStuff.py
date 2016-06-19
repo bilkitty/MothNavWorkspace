@@ -68,7 +68,6 @@ def plot_scores(scores,mothid,trial_count,targ_file=None):
    plt.ylim(min(scores)-pad,max(scores)+pad+1)
 
    visualize(targ_file)
-
    return
 
 def plot_mat(mat,bsz,kern=None,targ_file=None):
@@ -116,7 +115,6 @@ def plot_mat(mat,bsz,kern=None,targ_file=None):
             ax.scatter(row,col,s=mark_size*kern[row][col],c='r',marker='x')
          else:
             continue
-
 
    plt.title("matrix (block_size="+str(round(bsz,5))
       +" msize="+str(round(bsz*szx,5))+")")
@@ -169,7 +167,6 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
       plt.ylabel("y")
       plt.ylim(min(traj.pos_y),max(traj.pos_y))
       visualize(targ_file)
-
    return
 
 def plot_trees(axes,trees,trees_to_ignore=None,add_to_axes=False,targ_file=None):
