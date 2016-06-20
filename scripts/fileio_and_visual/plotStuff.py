@@ -33,17 +33,18 @@ def init_axes(bgcolor="white"):
 
 def plot_scores(scores,mothid,trial_count,targ_file=None):
    """
-   (numpy.array,str,int,str) -> None
+   (numpy.ndarray,str,int,str) -> None
 
    Plots and displays or saves an array of doubles. If a target file is
    specified, then the plot is saved as targ_file. The mothid and trial
    count are used to label the plot of scores.
 
+   Examples:
    >>> import numpy, os
    >>> dump = os.getcwd()+"/test"
    >>> mid = 'moth1'
    >>> tcnt = 0
-   >>> scores = numpy.array([float(i) for i in range(20)])
+   >>> scores = numpy.ndarray([float(i) for i in range(20)])
    >>> plot_scores(scores,mid,tcnt,targ_file=dump+"/scores.png")
    """
    ax = init_axes()
@@ -72,13 +73,14 @@ def plot_scores(scores,mothid,trial_count,targ_file=None):
 
 def plot_mat(mat,bsz,kern=None,targ_file=None):
    """
-   (numpy.array,int,numpy.array,str) -> None
+   (numpy.ndarray,int,numpy.ndarray,str) -> None
 
    Plots and displays or saves a 2-D matrix. If a target file is specified,
    then the plot is saved as targ_file. If a kernel (2-D matrix) is given,
    then the marker size representing a value in the mat is scaled by the
    corresponding value in the kernel.
 
+   Examples:
    >>> from fileio import load_dataframe
    >>> from discretize import get_patch, discretize
    >>> import os
@@ -135,6 +137,7 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
    If add_to_axes is True, then the plot is added to the subplot instead of
    being displayed or saved.
 
+   Examples:
    >>> from fileio import load_dataframe
    >>> import os, sys
    >>> dump = os.getcwd()+"/test"
@@ -171,7 +174,7 @@ def plot_traj(axes,traj,add_to_axes=False,targ_file=None):
 
 def plot_trees(axes,trees,trees_to_ignore=None,add_to_axes=False,targ_file=None):
    """
-   (matplotlib.axes.AxesSubplot,pandas.dataframe,numpy.array,bool,str) -> None
+   (matplotlib.axes.AxesSubplot,pandas.dataframe,numpy.ndarray,bool,str) -> None
 
    Adds a plot of a dataframe (with columns ['x', 'y', 'r']) to the subplot,
    axes. If a target file is specified, then the plot is saved as targ_file.
@@ -179,7 +182,7 @@ def plot_trees(axes,trees,trees_to_ignore=None,add_to_axes=False,targ_file=None)
    being displayed or saved. If trees_to_ignore is not None, then only a sub
    set of trees will be plotted.
 
-
+   Examples:
    >>> from fileio import load_dataframe
    >>> import os, sys
    >>> dump = os.getcwd()+"/test"
@@ -228,6 +231,7 @@ def plot_forest_patch(axes,pt,forest_patch,size,add_to_axes=False,targ_file=None
    saved as targ_file. If add_to_axes is True, then the plot is added to the
    subplot instead of being displayed or saved.
 
+   Examples:
    >>> from fileio import load_dataframe
    >>> from discretize import get_patch
    >>> import os
