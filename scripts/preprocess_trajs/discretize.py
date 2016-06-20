@@ -9,7 +9,7 @@ PAD = 1  # patches are padded with PAD*max(tree radius)
 
 def pack(mat,data,ii,arr):
   """
-  (ndarray,[double*(4)],int,ndarray)-> None
+  (numpy.ndarray,[double*(4)],int,numpy.ndarray)-> None
 
   Converts a matrix to a sparse mat then creates a tuple containing
   this sparse matrix and the elements from data list. This tuple is
@@ -47,7 +47,7 @@ def get_patch(origin,env):
 # jth-block between tcenter and origin.
 def map_to_mat_idx(tcenter,origin,bsize):
   """
-  (ndarray,ndarray,int) -> (int,int)
+  (numpy.ndarray,numpy.ndarray,int) -> (int,int)
 
   Computes the distance between tree center and
   origin in units of block size. Since the origin
@@ -83,6 +83,14 @@ def map_to_mat_idx(tcenter,origin,bsize):
 #   M = 2*patch/block size (odd)
 #   returns block size = -1 if error
 def discretize(pt,patch,sz,rmin):
+  """
+  (numpy.ndarray,pandas.dataframe or Series,int,int) -> [numpy.ndarray,int]
+
+  Given a dataframe of trees, quantize the (x,y,r) of the trees and create a
+  binary mask that represents trees with ones. The point (x,y) defines the
+  center of the mask, which is always odd. The mask and the bin size are
+  returned.
+  """
   # convert dataframes to numpy arrays
   if(isinstance(pt,pd.Series)):
     pt = pt.values
@@ -124,7 +132,7 @@ def discretize(pt,patch,sz,rmin):
     # create a mask of 1's centered on tree
     tsize = 2*rb + 1
     mask = np.ones((tsize,tsize),dtype=int)
-    # trim mask
+    # trim mask to approximate a circular tree
     for i in range(0,tsize):
       # offset defines the beginning of the range of columns to analyse
       offset = 2*rb_root2_by2
