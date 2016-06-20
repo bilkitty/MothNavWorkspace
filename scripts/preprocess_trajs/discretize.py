@@ -16,8 +16,12 @@ def pack(mat,data,ii,arr):
   inserted to the array at ii. We check that ii is within the bounds
   of the array. If ii exceeds the boundaries of the array, then the
   edges (i.e., 0 and len(array)-1) are overwritten; and a warning is
-  uttered.
+  uttered. If data is not length 4, then a warning message is given
+  and NaN values are packed into the array.
   """
+  if (data == None or len(data) != 4):
+    print("WARN: data is invalid length.")
+    data=[float('NaN')]*4
   if (ii < 0 or len(arr) <= ii):
     print("pack: warn: overwritting list data")
   bounded_index = min(max(ii,0),len(arr))
@@ -34,6 +38,9 @@ def get_patch(origin,forest):
   The trees are included in the neighborhood if they entirely
   fall in the boundary of the neighborhood. In other words,
   all the tree's surface is within the square boundary.
+
+  Example:
+  (see discretize)
   """
   patch_size = (int)(max(forest.r)*(10 + PAD))
   l = origin[0]-patch_size < forest.x-forest.r
@@ -51,7 +58,20 @@ def map_to_mat_idx(tcenter,origin,bsize):
   block size. Since the origin is meant to be at the center of an
   odd grid, the distance is computed as a count of half blocks.
   Then this count is converted to whole blocks in the x and y
-  direction and returned as a tuple.
+  direction and returned as a tuple. If block size is not valid,
+  i.e., negative or zero, then (NaN,NaN) is returned.
+
+  Example:
+  >>> from fileio import load_dataframe
+  >>> trees = load_dataframe("csv",dump+"/trees.csv")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+  >>> tree = trees.values[0]
+  >>> bin_size = min(trees.r)/2
+  >>> [binned_radius,tmp] = map_to_mat_idx((tree[0]+tree[2],tree[1])
+    ,tree
+    ,bin_size)
+  >>> binned_radius,tmp
+  (2, 0)
   """
   # avoid divide by zero or neg
   if (bsize <= 0):
@@ -77,7 +97,23 @@ def discretize(point,patch,patch_size,minimum_radius):
   Given a dataframe of trees, quantize the (x,y,r) of the trees and create a
   binary mask that represents trees with ones. The point (x,y) defines the
   center of the mask, which is always odd. The mask and the bin size are
-  returned.
+  returned. If the minimum radius is negative or the bin size is too small,
+  then [None,-1] is returned.
+
+   Examples:
+   >>> from fileio import load_dataframe
+   >>> from plotStuff import plot_mat
+   >>> import os
+   >>> dump = os.getcwd()+"/test"
+   >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
+   >>> point = traj[["pos_x","pos_y"]].iloc[400]
+   >>> trees = load_dataframe("csv",dump+"/trees.csv")
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+   >>> patch,size = get_patch(point,trees)
+   >>> [mask, bsize] = discretize(point,patch,size,min(trees.r))
+   >>> plot_mat(mask,bsize,targ_file=dump+"/discretize.png")
+   plotting mat(111x111)
   """
   # convert dataframes to numpy arrays
   if(isinstance(point,pd.Series)):
