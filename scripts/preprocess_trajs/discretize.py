@@ -20,10 +20,10 @@ def pack(mat,data,ii,arr):
   and NaN values are packed into the array.
   """
   if (data == None or len(data) != 4):
-    print("WARN: data is invalid length.")
+    print("discretize.pack: WARN: Data is invalid length.")
     data=[float('NaN')]*4
   if (ii < 0 or len(arr) <= ii):
-    print("pack: warn: overwritting list data")
+    print("discretize.pack: WARN: Overwritting list data")
   bounded_index = min(max(ii,0),len(arr))
   sparse_mat = bsr_matrix(mat).tobsr()
   arr[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
@@ -75,7 +75,7 @@ def map_to_mat_idx(tcenter,origin,bsize):
   """
   # avoid divide by zero or neg
   if (bsize <= 0):
-    print("(!) map_to_mat_idx: invalid bsize "+str(bsize))
+    print("(!) discretize.map_to_mat_idx: Invalid bsize "+str(bsize))
     return (float('NaN'),float('NaN'))
 
   # get deltax, deltay
@@ -123,7 +123,7 @@ def discretize(point,patch,patch_size,minimum_radius):
     patch = patch.values
 
   if(minimum_radius < 0):
-    print("(!) Negative minimum_radius")
+    print("(!) discretize.discretize: Negative minimum_radius")
     return [None,-1]
   # get block size
   bin_size = minimum_radius/2
@@ -133,7 +133,7 @@ def discretize(point,patch,patch_size,minimum_radius):
   # make sure matrix is oddxodd and not ridiculously large
   n_bins += (n_bins+1)%2
   if(sys.maxsize < n_bins):
-    print("(!) outrageous mat size, block size is too small")
+    print("(!) discretize.discretize: Outrageous mat size, block size is too small")
     return [None,-1]
 
   # init matrix that hold binary values

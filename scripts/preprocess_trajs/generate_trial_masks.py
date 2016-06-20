@@ -36,7 +36,7 @@ def discretize_and_save(trial_hash,forest,traj,trial_id,trial_datetime):
       if (0 < bsize_temp):
          discretize.pack(mask,point,pt_cnt,trial)
       else:
-         print("(!) processTrial: failed to compute mask for "+trial_id+"["+str(pt_cnt)+"]")
+         print("generate_trail_masks.processTrial: WARN: failed to compute mask for "+trial_id+"["+str(pt_cnt)+"]")
 
       pt_cnt += 1
 
@@ -60,6 +60,7 @@ def writeToFile(file_name,txt):
 def processTrials(batch_o_trials,forest,filepath_prefix,logfile):
    """
    (array of str,pandas.dataframe,str,str) -> None
+
    Loads a data frame from each file path in the list and transforms it
    into an array of discretized frames. These frames are saved into a
    dictionary of the corresponding mothid. The dictionary of trials is
@@ -81,7 +82,7 @@ def processTrials(batch_o_trials,forest,filepath_prefix,logfile):
       print( "Processing points: "+str(len(raw_data.values)) )
       # skip processing if dataframe is empty
       if(len(raw_data) == 0):
-         print("(!) ERROR: No moth data loaded for "+st)
+         print("(!) generate_trail_masks.processTrials: No moth data loaded for "+st)
          continue
 
       new_moth = raw_data.moth_id.iloc[0]
@@ -149,7 +150,7 @@ def main():
 
    # terminate early if forest data is empty
    if(len(forest) == 0):
-      print("(!) ERROR: No tree data loaded.")
+      print("(!) generate_trail_masks.main: No tree data loaded.")
       return
 
    # prepare to log processed trials in Notes file and record datetime
