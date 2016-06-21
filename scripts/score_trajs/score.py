@@ -38,64 +38,88 @@ def score_frame(mask,kernel):
   ret /= mask.shape[0]/mask.shape[1]
   return ret
 
-# instead of ktype, pass kernel function (e.g., 2d gaussian function)
-def generateKernel(mask_and_hxhy,means,sigmas,amplitudes,rotate=False):
+oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
+def gaussian2d(N,meanxy,sigmaxy,amp):
   """
-  ([numpy.ndarray,f4,f4]
+  (int,tuple(f4,f4),tuple(f4,f4),f4) -> numpy.ndarray
+
+  Returns an NxN Gaussian matrix with amplitude, mean, and standard dev
+  described by meanxy,sigmaxy,amp.
+  """
+
+  xbar,ybar = meanxy[0],meanxy[1]
+  xsig,ysig = sigmaxy[0],sigmaxy[1]
+
+  # initialize domain
+  x = np.linspace(-N//2,(N//2)+1,N)
+  y = np.linspace(-N//2,(N//2)+1,N)
+  # reshape numpy array to column vector Nx1
+  gaussianx = oneDGaussian(xbar,x,xsig).reshape(N,1)
+  # reshape numpy array to row vector 1xN
+  gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
+  # compute dot product of x and y
+  gaussian2d = amp*np.dot(gaussianx,gaussiany)
+  # let's check out what the kernel looks like
+  pylab.pcolor(x,y,gaussian2d)
+  pylab.show()
+
+  return gaussian2d
+
+# instead of ktype, pass kernel function (e.g., 2d gaussian function)
+def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
+  """
+  ([int,f4,f4]
     ,numpy.ndarray(tuple(f4,f4))
     ,numpy.ndarray(tuple(f4,f4))
     ,numpy.ndarray(f4)
     ,bool)
   -> ndarray(ndarray)
 
-  Given [NxN mask,headingx,headingy] and M sets of gaussian parameters (mean,
+  Given [N,headingx,headingy] and M sets of gaussian parameters (mean,
   stdev,amplitude), compute an NxN Gaussian kernel. If the lengths of gaussian
-  parameters don't match or the lenght of mask_and_hxhy is not 3, then None is
+  parameters don't match or the lenght of ksize_and_hxhy is not 3, then None is
   returned. Otherwise, return an unrotated kernel by default and a rotate kernel
   if rotate is True.
+
+  Examples:
+  >>> sizehxhy = [5,0,0]
+  >>> mean = [(0,0)]
+  >>> sig = [(10,10)]
+  >>> amp = [1]
+  >>> g2d = generateKernel(sizehxhy,mean,sig,amp)
+  array([[ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119],
+         [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
+         [ 0.95599748,  0.98881304,  1.        ,  0.98881304,  0.95599748],
+         [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
+         [ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119]])
   """
-  if (mask_and_hxhy == None or len(mask_and_hxhy) != 3):
-    print("(!) score.generateKernel: Invalid mask_and_hxhy length. Needs 3; [mask,headingx,headingy].")
+  if (ksize_and_hxhy == None or len(ksize_and_hxhy) != 3):
+    print("""(!) score.generateKernel: Invalid ksize_and_hxhy length.
+      Needs 3; [N,headingx,headingy].""")
     return None
 
   M = len(means)
-  if (len(sigmas) != M or len(amplitude) != M):
-    print("""(!) score.generateKernel: Lengths of Gaussian parameter arrays don't match;
-      len of means,sigs,amps = {:d},{:d},{:d}""".format(len(means),len(sigmas),len(amplitudes)))
+  if (len(sigmas) != M or len(amplitudes) != M):
+    print("""(!) score.generateKernel: Lengths of Gaussian parameter arrays
+      don't match; len of means,sigs,amps = {:d},{:d},{:d}""".format(len(means)
+        ,len(sigmas)
+        ,len(amplitudes)))
     return None
 
-  # initialize NxN kernel with zeros
-  N = mask_and_hxhy[0].shape[0]
+  N = ksize_and_hxhy[0]
   kernel = np.zeros((N,N),dtype=float)
-  # loop over M
+
+  # Normalize the kernel by M... not sure if this is what should be done
   for term in range(M):
-    xbar,ybar = means[term][0],means[term][1]
-    xsig,ysig = sigmas[term][0],sigmas[term][1]
-    amp = amplitudes[term]
-
-    # (!) this needs to be generalized so the kernel is a sum of 2-d gaussians
-    # gaussian2d(N,meanxy,sigmaxy,amp) -> numpy.ndarray
-    oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
-    # initialize domain
-    x = np.linspace(-N//2,(N//2)+1,N)
-    y = np.linspace(-N//2,(N//2)+1,N)
-    # reshape numpy array to column vector Nx1
-    gaussianx = oneDGaussian(xbar,x,xsig).reshape(N,1)
-    # reshape numpy array to row vector 1xN
-    gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
-    # compute dot product of x and y
-    gaussian2d = amplitude*np.dot(gaussianx,gaussiany)
-
-  # let's check out what the kernel looks like
-  pylab.pcolor(x,y,gaussian2d)
-  pylab.show()
+    kernel += (1./M)*gaussian2d(N,means[term],sigmas[term],amplitudes[term])
 
   if (rotate):
-    theta_rad = math.atan(mask_and_hxhy[2]/mask_and_hxhy[1])
+    theta_rad = math.atan(ksize_and_hxhy[2]/ksize_and_hxhy[1])
     theta_deg = 180*theta_rad/math.pi
-    gaussian2d = ndimage.interpolation.rotate(gaussian2d,theta_deg,mode='nearest',reshape=False)
+    kernel = ndimage.interpolation.rotate(kernel,theta_deg
+      ,mode='nearest',reshape=False)
 
-  return gaussian2d
+  return kernel
 
 def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
   # measure processing times [score,genkernel]
