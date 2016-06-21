@@ -131,25 +131,43 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
 def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   """
 
-  ([tuple(numpy.ndarray,double,double,double,double)]
-    ,int
-    ,[str,double,double,double])
-
   Examples:
   >>> mean = [(0,0)]
   >>> sig = [(10,10)]
   >>> amp = [1]
   >>> description = ["moth1",4,4,8]
   >>> import os
-  >>> with open(os.get_cwd()+"/test/4_4_8.pickle, 'rb') as handle:
-  ... pdata = pickle.load(handle)
+  >>> import pickle
+  >>> with open(os.getcwd()+"/test/4_4_8.pickle", 'rb') as handle:
+    pdata = pickle.load(handle)
+
   >>> trial = [k for k in pdata.keys()]
   >>> trial.sort()
-  >>> score_trial(pdata[trial[0]]
+  >>> scores = score_trial(pdata[trial[0]]
     ,0
     ,description
     ,[mean,sig,amp]
     ,display=False)
+  Scoring: t0
+  Conditions:
+    moth_id=moth1
+    flight_speed=4.000000
+    fogmin=4.000000
+    fogmax=8.000000
+  Kernel paramters:
+    means=[(0, 0)]
+    sigmas=[(10, 10)]
+    amps=[1]
+  ===== SCORE =====
+  masks processed: 3454
+  cummulative_score: 3741.61132491
+  min_score: -1.0
+  max_score: 115.365077304
+  ==== CPU TIME (ms) ====
+  generating kernel: 2.50196
+  processing masks: 162.80174
+  avg per mask: 0.04713
+  cummulative kernel and mask: 165.30371
   >>> handle.close()
   """
   # measure processing times [score,genkernel]
@@ -157,14 +175,24 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
 
   print("-----------------")
   print("Scoring: t{:d}".format(tcnt))
-  print("[flight_speed,fogmin,fogmax]: {:s}".format(str(desc))
-  print("Kernel paramters: {:s}".format(str(kernel_params))
+  print("Conditions:\n\tmoth_id={:s}\n\tflight_speed={:f}\n\tfogmin={:f}\n\tfogmax={:f}"
+    .format(desc[0]
+      ,desc[1]
+      ,desc[2]
+      ,desc[3])
+  )
+  print("Kernel paramters:\n\tmeans={:s}\n\tsigmas={:s}\n\tamps={:s}"
+    .format(str(kernel_params[0])
+      ,str(kernel_params[1])
+      ,str(kernel_params[2]))
+  )
 
   # extract masks and block size
-  trial_masks = trial_data['mat']
-  headingxs = trial_data['hx']
-  headingys = trial_data['hy']
-  bsize = trial_data[1]
+  data = trial_data[0]
+  block_size = trial_data[1]
+  trial_masks = data['mat']
+  headingxs = data['hx']
+  headingys = data['hy']
 
   # score discretized frames of trajectory
   scores = [0]*len(trial_masks)
@@ -184,9 +212,9 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   for sparse_mask in trial_masks:
     mask = sparse_mask.toarray()
     if (kernel_params == 'rotated'):
-      # refresh kernel
       start = time.time()
 
+      # refresh kernel
       ksize_and_hxhy = [trial_masks[imask].shape[0]
         ,headingxs[imask]
         ,headingys[imask]]
@@ -207,22 +235,29 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
         +'-t'+str(tcnt)
         +'-'+str(imask)+".png")
 
-    # get score
     start = time.time()
-    scores[imask] = score_frame(mask,kernel)
-    procTime[0] += time.time() - start
 
+    # get score
+    scores[imask] = score_frame(mask,kernel)
     imask += 1
 
-    print("===== SCORE =====")
-    print("masks processed: "+str(imask))
-    print("cummulative_score: "+str(sum(scores[0:imask])))
-    print("min_score: "+str(min(scores[0:imask])))
-    print("max_score: "+str(max(scores[0:imask])))
-    print("==== CPU TIME (ms) ====")
-    print("generating kernel: "+str(round(1000*procTime[1],5)))
-    print("processing masks: "+str(round(1000*procTime[0],5)))
-    print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
-    print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
+    procTime[0] += time.time() - start
+
+
+  print("===== SCORE =====")
+  print("masks processed: "+str(imask))
+  print("cummulative_score: "+str(sum(scores[0:imask])))
+  print("min_score: "+str(min(scores[0:imask])))
+  print("max_score: "+str(max(scores[0:imask])))
+  print("==== CPU TIME (ms) ====")
+  print("generating kernel: "+str(round(1000*procTime[1],5)))
+  print("processing masks: "+str(round(1000*procTime[0],5)))
+  print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
+  print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
 
   return scores[0:imask]
+
+""" DOC TESTS """
+if __name__ == "__main__":
+   import doctest
+   doctest.testmod()
