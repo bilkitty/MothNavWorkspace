@@ -32,11 +32,11 @@ def score_frame(mask,kernel):
   if(is_square_mat(mask) and is_square_mat(kernel)):
     prod = np.multiply(mask,kernel)
     ret = prod.sum()
- # is this meaningful?
- # represent score as percent coverage if kernel is uniform ones
+
+  # Score reflects the average value in product of the mask and kernel.
   # ret = 1 - ret/mask.shape[0]/mask.shape[1]
-  ret /= mask.shape[0]/mask.shape[1]
-  return ret
+  score = ret/mask.shape[0]/mask.shape[1]
+  return score
 
 oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
 def gaussian2d(N,meanxy,sigmaxy,amp):
@@ -130,6 +130,55 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
 
 def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   """
+  Generate a list of scores, one score value for each frame within a trial.
+
+  Masks contained in `trial_data` are convolved with a kernel matrix to
+  yield a score value. The score value is normalized by the dimensions of
+  the kernel/mask. The kernel is a 2-D Gaussian defined by `kernel_params`.
+  `tcnt` and `desc` provide contextual informaiton about the trial.
+
+  Parameters
+  ----------
+  trial_data : array_like
+    This array should be two nested lists. The outter list should only
+    contain a list of mask tuples and a bin size used to generate those
+    masks (i.e., [[(masks,data,...,data)],f4].
+    See generate_trial_masks.discretize_and_save to see how trials are
+    packaged and saved.
+  tcnt : int
+    Used to identify trial in summary.
+  desc : list
+    A 4 element list that describes the subject identity and conditions
+    used in the trial (i.e., moth_id, flight_speed, fogmin, fogmax)
+  kernel_params : array_like
+    This is a nested array of that includes the following:
+    xymeans - an array of tuples  (i.e., [(m0x,m0y),...,(mTx,mTy)])
+    xysigmas - an array of tuples (i.e., [(s0x,s0y),...,(sTx,sTy)])
+    amplitudes - an array of int  (i.e., [a0,...,aT])
+    These arrays should have the same length, T.
+  display : bool, optional
+    Plot scores when `display` is true.
+
+Returns
+-------
+scores : array_like
+  A list of score values for each frame in the trial.
+
+  Explanation of return value named `describe`.
+out : type
+  Explanation of `out`.
+Other Parameters
+----------------
+only_seldom_used_keywords : type
+    Explanation
+common_parameters_listed_above : type
+    Explanation
+Raises
+------
+BadException
+    Because you shouldn't have done that.
+See Also
+--------
 
   Examples:
   >>> mean = [(0,0)]
@@ -139,15 +188,16 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   >>> import os
   >>> import pickle
   >>> with open(os.getcwd()+"/test/4_4_8.pickle", 'rb') as handle:
-    pdata = pickle.load(handle)
+  ...   pdata = pickle.load(handle)
 
   >>> trial = [k for k in pdata.keys()]
   >>> trial.sort()
   >>> scores = score_trial(pdata[trial[0]]
-    ,0
-    ,description
-    ,[mean,sig,amp]
-    ,display=False)
+  ... ,0                # trial number
+  ... ,description      # moth and conditions
+  ... ,[mean,sig,amp]   # kernel parameters
+  ... ,display=False)   #
+  -----------------
   Scoring: t0
   Conditions:
     moth_id=moth1
@@ -163,11 +213,6 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   cummulative_score: 3741.61132491
   min_score: -1.0
   max_score: 115.365077304
-  ==== CPU TIME (ms) ====
-  generating kernel: 2.50196
-  processing masks: 162.80174
-  avg per mask: 0.04713
-  cummulative kernel and mask: 165.30371
   >>> handle.close()
   """
   # measure processing times [score,genkernel]
@@ -249,11 +294,11 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   print("cummulative_score: "+str(sum(scores[0:imask])))
   print("min_score: "+str(min(scores[0:imask])))
   print("max_score: "+str(max(scores[0:imask])))
-  print("==== CPU TIME (ms) ====")
-  print("generating kernel: "+str(round(1000*procTime[1],5)))
-  print("processing masks: "+str(round(1000*procTime[0],5)))
-  print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
-  print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
+  # print("==== CPU TIME (ms) ====")
+  # print("generating kernel: "+str(round(1000*procTime[1],5)))
+  # print("processing masks: "+str(round(1000*procTime[0],5)))
+  # print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
+  # print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
 
   return scores[0:imask]
 
