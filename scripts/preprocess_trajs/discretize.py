@@ -13,11 +13,12 @@ def pack(mat,data,ii,arr):
 
   Converts a matrix to a sparse mat then creates a tuple containing
   this sparse matrix and the elements from data list. This tuple is
-  inserted to the array at ii. We check that ii is within the bounds
-  of the array. If ii exceeds the boundaries of the array, then the
-  edges (i.e., 0 and len(array)-1) are overwritten; and a warning is
-  uttered. If data is not length 4, then a warning message is given
-  and NaN values are packed into the array.
+  inserted to the array at ii.
+  We check that ii is within the bounds of the array. If ii exceeds
+  the boundaries of the array, then the edges (i.e., 0 and len(array)-1)
+  are overwritten; and a warning is uttered.
+  If data is not length 4, then a warning message is given and NaN
+  values are packed into the array.
   """
   if (data == None or len(data) != 4):
     print("discretize.pack: WARN: Data is invalid length.")
@@ -188,3 +189,8 @@ def discretize(point,patch,patch_size,minimum_radius):
     mat[icenter][jcenter] = -1
 
   return [mat,bin_size]
+
+""" DOC TESTS """
+if __name__ == "__main__":
+   import doctest
+   doctest.testmod()
