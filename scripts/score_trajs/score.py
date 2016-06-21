@@ -58,14 +58,9 @@ def gaussian2d(N,meanxy,sigmaxy,amp):
   # reshape numpy array to row vector 1xN
   gaussiany = oneDGaussian(ybar,y,ysig).reshape(1,N)
   # compute dot product of x and y
-  gaussian2d = amp*np.dot(gaussianx,gaussiany)
-  # let's check out what the kernel looks like
-  pylab.pcolor(x,y,gaussian2d)
-  pylab.show()
+  return amp*np.dot(gaussianx,gaussiany)
 
-  return gaussian2d
-
-# instead of ktype, pass kernel function (e.g., 2d gaussian function)
+# instead of kernel_params, pass kernel function (e.g., 2d gaussian function)
 def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   """
   ([int,f4,f4]
@@ -86,12 +81,18 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   >>> mean = [(0,0)]
   >>> sig = [(10,10)]
   >>> amp = [1]
-  >>> g2d = generateKernel(sizehxhy,mean,sig,amp)
+  >>> generateKernel(sizehxhy,mean,sig,amp)
   array([[ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119],
          [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
          [ 0.95599748,  0.98881304,  1.        ,  0.98881304,  0.95599748],
          [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
          [ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119]])
+  >>> sizehxhy = [20,0,0]
+  >>> mean.append((5,5))
+  >>> sig.append((1,1))
+  >>> amp.append(2)
+  >>> g2d = generateKernel(sizehxhy,mean,sig,amp)
+
   """
   if (ksize_and_hxhy == None or len(ksize_and_hxhy) != 3):
     print("""(!) score.generateKernel: Invalid ksize_and_hxhy length.
@@ -119,63 +120,109 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
     kernel = ndimage.interpolation.rotate(kernel,theta_deg
       ,mode='nearest',reshape=False)
 
+  # # let's check out what the kernel looks like
+  # x = np.linspace(-N//2,(N//2)+1,N)
+  # y = np.linspace(-N//2,(N//2)+1,N)
+  # pylab.pcolor(x,y,kernel)
+  # pylab.show()
+
   return kernel
 
-def score_trial(trial_data,tcnt,desc,ktype='uniform', display=False):
+def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
+  """
+
+  ([tuple(numpy.ndarray,double,double,double,double)]
+    ,int
+    ,[str,double,double,double])
+
+  Examples:
+  >>> mean = [(0,0)]
+  >>> sig = [(10,10)]
+  >>> amp = [1]
+  >>> description = ["moth1",4,4,8]
+  >>> import os
+  >>> with open(os.get_cwd()+"/test/4_4_8.pickle, 'rb') as handle:
+  ... pdata = pickle.load(handle)
+  >>> trial = [k for k in pdata.keys()]
+  >>> trial.sort()
+  >>> score_trial(pdata[trial[0]]
+    ,0
+    ,description
+    ,[mean,sig,amp]
+    ,display=False)
+  >>> handle.close()
+  """
   # measure processing times [score,genkernel]
   procTime = [0.]*2
 
   print("-----------------")
-  print("Scoring: t"+str(tcnt))
-  print("Desc: "+str(desc))
-  print("Kernel: "+ktype)
+  print("Scoring: t{:d}".format(tcnt))
+  print("[flight_speed,fogmin,fogmax]: {:s}".format(str(desc))
+  print("Kernel paramters: {:s}".format(str(kernel_params))
 
   # extract masks and block size
-  trial_masks = trial_data[0]['mat']
+  trial_masks = trial_data['mat']
+  headingxs = trial_data['hx']
+  headingys = trial_data['hy']
   bsize = trial_data[1]
 
   # score discretized frames of trajectory
   scores = [0]*len(trial_masks)
-  mcnt = 0 # mask count
+  imask = 0 # mask count
   # initialize kernel
   start = time.time()
-  kernel = generateKernel(ktype,trial_data[0][mcnt])
-  procTime[1] += time.time() - start
 
-  # for sparse_mask in trial_masks[0:100]:
+  ksize_and_hxhy = [trial_masks[0].shape[0],headingxs[0],headingys[0]]
+  kernel = generateKernel(ksize_and_hxhy
+    ,kernel_params[0]
+    ,kernel_params[1]
+    ,kernel_params[2]
+    ,rotate=True)
+
+  procTime[1] += time.time() - start
+  # score each mask in trial masks
   for sparse_mask in trial_masks:
     mask = sparse_mask.toarray()
-    if (ktype == 'rotated'):
+    if (kernel_params == 'rotated'):
       # refresh kernel
       start = time.time()
-      kernel = generateKernel(ktype,trial_data[0][mcnt])
+
+      ksize_and_hxhy = [trial_masks[imask].shape[0]
+        ,headingxs[imask]
+        ,headingys[imask]]
+      kernel = generateKernel(ksize_and_hxhy
+        ,kernel_params[0]
+        ,kernel_params[1]
+        ,kernel_params[2]
+        ,rotate=True)
+
       procTime[1] += time.time() - start
 
     # visualize loaded masks
-    if (display and mcnt < 100):
+    if (display and imask < 100):
       plot_mat(mask,bsize,"./masks/"+desc[0]
         +'-'+str(int(desc[1]))
         +'-'+str(int(desc[2]))
         +'-'+str(int(desc[3]))
         +'-t'+str(tcnt)
-        +'-'+str(mcnt)+".png")
+        +'-'+str(imask)+".png")
 
     # get score
     start = time.time()
-    scores[mcnt] = score_frame(mask,kernel)
+    scores[imask] = score_frame(mask,kernel)
     procTime[0] += time.time() - start
 
-    mcnt += 1
+    imask += 1
 
     print("===== SCORE =====")
-    print("masks processed: "+str(mcnt))
-    print("cummulative_score: "+str(sum(scores[0:mcnt])))
-    print("min_score: "+str(min(scores[0:mcnt])))
-    print("max_score: "+str(max(scores[0:mcnt])))
+    print("masks processed: "+str(imask))
+    print("cummulative_score: "+str(sum(scores[0:imask])))
+    print("min_score: "+str(min(scores[0:imask])))
+    print("max_score: "+str(max(scores[0:imask])))
     print("==== CPU TIME (ms) ====")
     print("generating kernel: "+str(round(1000*procTime[1],5)))
     print("processing masks: "+str(round(1000*procTime[0],5)))
-    print("avg per mask: "+str(round(1000*procTime[0]/mcnt,5)))
+    print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
     print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
 
-  return scores[0:mcnt]
+  return scores[0:imask]
