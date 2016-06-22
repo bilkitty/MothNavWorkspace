@@ -1,0 +1,57 @@
+DIRECTORY MAP
+.
+├── data
+│   ├── forests
+│   ├── masks
+│   │   ├── original_set
+│   │   │   └── mothid
+│   │   └── random_sets
+│   │       └── forest_DATETIME
+│   │           └── mothid
+│   ├── single_trials
+│   │   └── processed
+│   └── trials
+├── examples
+│   ├── frames
+│   │   ├── small_frame_and_masks
+│   │   ├── trial0
+│   │   ├── trial1
+│   │   └── trial2
+│   ├── scores
+│   └── trajectory_plots
+└── scripts
+    ├── fileio_and_visual
+    ├── preprocess_trajs
+    ├── score_trajs
+    └── test
+
+/data : a collection of raw and processed trial data, forest data, transformed trial data (i.e., masks).
+  /forests : hdf files containing dataframes with columns ['x','y','r']
+  /masks :
+    /original_set :
+    /random_sets :
+  /single_trials :
+  /trials :
+
+/examples :
+  /frames :
+  /scores :
+  /trajectory_plots :
+
+/scripts :
+  /fileio_and_visual :
+  /preprocess_trajs :
+  /score_trajs :
+  /test :
+
+
+
+
+/examples : a collection of processed trials, scores, and trajectory plots.
+
+
+
+
+/scripts : python and bash scripts used to process files in /data.
+
+
