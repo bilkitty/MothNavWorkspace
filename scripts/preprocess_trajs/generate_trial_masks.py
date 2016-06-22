@@ -65,6 +65,37 @@ def processTrials(batch_o_trials,forest,filepath_prefix,logfile):
    into an array of discretized frames. These frames are saved into a
    dictionary of the corresponding mothid. The dictionary of trials is
    saved into a pickle labeled with the trial conditions.
+
+
+   >>> import os
+   >>> dump = os.getcwd()+"/test"
+   >>> trials = [dump+"/moth1_448f0.h5"]
+   >>> trees = load_dataframe("csv",dump+"/trees.csv")
+   >>> directory_path = dump+"/throwaway_masks"
+   >>> logfile = open(dump+"throwaway_logfile.txt","wb+")
+   >>> processTrials(trials,trees,directory_path,logfile)
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
+   Processing points: 3454
+   t0
+   len: 3454
+   moth1: saving 1 trajs in /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/throwaway_masks/moth1/4_4_8.pickle
+   >>> trials_string = trials[0]
+   >>> with open(dump+"fancy_logfile.txt","wb+") as fancy_logfile:
+   >>> ...     processTrials([trials_string,],trees,directory_path,fancy_logfile)
+   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
+   Processing points: 3454
+   t0
+   len: 3454
+   moth1: saving 1 trajs in /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/throwaway_masks/moth1/4_4_8.pickle
+   >>> trial_moth6 = "../data/single_trials/moth6_448f2.h5"
+   >>> processTrials([trial_moth6],trees,directory_path,logfile)
+   loading: ../data/single_trials/moth6_448f2.h5
+   Processing points: 3455
+   t0
+   len: 3455
+   moth6: saving 1 trajs in /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/throwaway_masks/moth6/4_4_8.pickle
+
+
    """
    # trial and current mothid
    trial_cnt = 0
@@ -180,6 +211,6 @@ def main():
    print("~~Done :)")
    return
 
-main()
-
+if __name__ == "__main__":
+   main()
 
