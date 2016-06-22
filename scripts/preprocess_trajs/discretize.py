@@ -44,10 +44,10 @@ def get_patch(origin,forest):
   (see discretize)
   """
   patch_size = (int)(max(forest.r)*(10 + PAD))
-  l = origin[0]-patch_size < forest.x-forest.r
-  r = forest.x+forest.r < origin[0]+patch_size
-  u = forest.y+forest.r < origin[1]+patch_size
-  d = origin[1]-patch_size < forest.y-forest.r
+  l = float(origin[0]-patch_size) < forest.x-forest.r
+  r = forest.x+forest.r < float(origin[0]+patch_size)
+  u = forest.y+forest.r < float(origin[1]+patch_size)
+  d = float(origin[1]-patch_size) < forest.y-forest.r
   patch = forest[l & r & u & d]
   return [patch, patch_size]
 
@@ -64,13 +64,15 @@ def map_to_mat_idx(tcenter,origin,bsize):
 
   Example:
   >>> from fileio import load_dataframe
+  >>> import os
+  >>> dump = os.getcwd()+"/test"
   >>> trees = load_dataframe("csv",dump+"/trees.csv")
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+  loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
   >>> tree = trees.values[0]
   >>> bin_size = min(trees.r)/2
   >>> [binned_radius,tmp] = map_to_mat_idx((tree[0]+tree[2],tree[1])
-    ,tree
-    ,bin_size)
+  ...   ,tree
+  ...   ,bin_size)
   >>> binned_radius,tmp
   (2, 0)
   """
