@@ -125,8 +125,8 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   Returns
   -------
   kernel : array_like
-    An NxN matrix that is a discretization of one or more 2-D Gaussian
-    terms in a scoring function.
+   An NxN matrix that is a discretization of one or more 2-D Gaussian
+   terms in a scoring function.
 
   Examples
   --------
@@ -136,10 +136,10 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   >>> amp = [1]
   >>> generateKernel(sizehxhy,mean,sig,amp)
   array([[ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119],
-         [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
-         [ 0.95599748,  0.98881304,  1.        ,  0.98881304,  0.95599748],
-         [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
-         [ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119]])
+      [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
+      [ 0.95599748,  0.98881304,  1.      ,  0.98881304,  0.95599748],
+      [ 0.94530278,  0.97775124,  0.98881304,  0.97775124,  0.94530278],
+      [ 0.91393119,  0.94530278,  0.95599748,  0.94530278,  0.91393119]])
   >>> sizehxhy = [20,0,0]
   >>> mean.append((5,5))
   >>> sig.append((1,1))
@@ -149,18 +149,18 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   """
   if (ksize_and_hxhy == None or len(ksize_and_hxhy) != 3):
     print("""(!) score.generateKernel: Invalid ksize_and_hxhy length.
-      Needs 3; [N,headingx,headingy].""")
-    return None
+    Needs 3; [N,headingx,headingy].""")
+   return None
 
   M = len(means)
   if (M <= 0):
     print("""(!) score.generateKernel: Invalid length {:d} for Gaussian
-      parameters.""".format(M))
+    parameters.""".format(M))
   if (len(sigmas) != M or len(amplitudes) != M):
     print("""(!) score.generateKernel: Lengths of Gaussian parameter arrays
-      don't match; len of means,sigs,amps = {:d},{:d},{:d}""".format(len(means)
-        ,len(sigmas)
-        ,len(amplitudes)))
+    don't match; len of means,sigs,amps = {:d},{:d},{:d}""".format(len(means)
+      ,len(sigmas)
+      ,len(amplitudes)))
     return None
 
   N = ksize_and_hxhy[0]
@@ -229,15 +229,15 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   >>> import os
   >>> import pickle
   >>> with open(os.getcwd()+"/test/4_4_8.pickle", 'rb') as handle:
-  ...   pdata = pickle.load(handle)
+  ...  pdata = pickle.load(handle)
 
   >>> trial = [k for k in pdata.keys()]
   >>> trial.sort()
   >>> scores = score_trial(pdata[trial[0]]
-  ... ,0                # trial number
-  ... ,description      # moth and conditions
-  ... ,[mean,sig,amp]   # kernel parameters
-  ... ,display=False)   #
+  ... ,0           # trial number
+  ... ,description    # moth and conditions
+  ... ,[mean,sig,amp]  # kernel parameters
+  ... ,display=False)  #
   -----------------
   Scoring: t0
   Conditions:
@@ -312,22 +312,22 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
 
       procTime[1] += time.time() - start
 
-    # visualize loaded masks
-    if (display and imask < 100):
-      plot_mat(mask,bsize,"./masks/"+desc[0]
-        +'-'+str(int(desc[1]))
-        +'-'+str(int(desc[2]))
-        +'-'+str(int(desc[3]))
-        +'-t'+str(tcnt)
-        +'-'+str(imask)+".png")
+  # visualize loaded masks
+  if (display and imask < 100):
+    plot_mat(mask,bsize,"./masks/"+desc[0]
+      +'-'+str(int(desc[1]))
+      +'-'+str(int(desc[2]))
+      +'-'+str(int(desc[3]))
+      +'-t'+str(tcnt)
+      +'-'+str(imask)+".png")
 
-    start = time.time()
+  start = time.time()
 
-    # get score
-    scores[imask] = score_frame(mask,kernel)
-    imask += 1
+  # get score
+  scores[imask] = score_frame(mask,kernel)
+  imask += 1
 
-    procTime[0] += time.time() - start
+  procTime[0] += time.time() - start
 
 
   print("===== SCORE =====")
@@ -345,5 +345,5 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
 
 """ DOC TESTS """
 if __name__ == "__main__":
-   import doctest
-   doctest.testmod()
+  import doctest
+  doctest.testmod()

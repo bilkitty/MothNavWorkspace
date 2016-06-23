@@ -25,9 +25,9 @@ def pack(mat,data,ii,arr):
     data=[float('NaN')]*4
   if (ii < 0 or len(arr) <= ii):
     print("discretize.pack: WARN: Overwritting list data")
-  bounded_index = min(max(ii,0),len(arr))
-  sparse_mat = bsr_matrix(mat).tobsr()
-  arr[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
+    bounded_index = min(max(ii,0),len(arr))
+    sparse_mat = bsr_matrix(mat).tobsr()
+    arr[bounded_index] = (sparse_mat,data[0],data[1],data[2],data[3])
   return
 
 def get_patch(origin,forest):
@@ -71,8 +71,8 @@ def map_to_mat_idx(tcenter,origin,bsize):
   >>> tree = trees.values[0]
   >>> bin_size = min(trees.r)/2
   >>> [binned_radius,tmp] = map_to_mat_idx((tree[0]+tree[2],tree[1])
-  ...   ,tree
-  ...   ,bin_size)
+  ...  ,tree
+  ...  ,bin_size)
   >>> binned_radius,tmp
   (2, 0)
   """
@@ -103,20 +103,20 @@ def discretize(point,patch,patch_size,minimum_radius):
   returned. If the minimum radius is negative or the bin size is too small,
   then [None,-1] is returned.
 
-   Examples:
-   >>> from fileio import load_dataframe
-   >>> from plotStuff import plot_mat
-   >>> import os
-   >>> dump = os.getcwd()+"/test"
-   >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
-   >>> point = traj[["pos_x","pos_y"]].iloc[400]
-   >>> trees = load_dataframe("csv",dump+"/trees.csv")
-   loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
-   >>> patch,size = get_patch(point,trees)
-   >>> [mask, bsize] = discretize(point,patch,size,min(trees.r))
-   >>> plot_mat(mask,bsize,targ_file=dump+"/discretize.png")
-   plotting mat(111x111)
+  Examples:
+  >>> from fileio import load_dataframe
+  >>> from plotStuff import plot_mat
+  >>> import os
+  >>> dump = os.getcwd()+"/test"
+  >>> traj = load_dataframe("h5",dump+"/moth1_448f0.h5")
+  loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/moth1_448f0.h5
+  >>> point = traj[["pos_x","pos_y"]].iloc[400]
+  >>> trees = load_dataframe("csv",dump+"/trees.csv")
+  loading: /home/bilkit/Dropbox/moth_nav_analysis/scripts/test/trees.csv
+  >>> patch,size = get_patch(point,trees)
+  >>> [mask, bsize] = discretize(point,patch,size,min(trees.r))
+  >>> plot_mat(mask,bsize,targ_file=dump+"/discretize.png")
+  plotting mat(111x111)
   """
   # convert dataframes to numpy arrays
   if(isinstance(point,pd.Series)):
@@ -146,53 +146,53 @@ def discretize(point,patch,patch_size,minimum_radius):
   mat[int(n_bins/2)][int(n_bins/2)] = -1
 
   for tree in patch:
-    # get tree center (block size should be non-zero)
-    binned_tree_loc = map_to_mat_idx(tree,point,bin_size)
+  # get tree center (block size should be non-zero)
+  binned_tree_loc = map_to_mat_idx(tree,point,bin_size)
 
-    # convert tree radius to nblocks
-    radius = tree[2] # length from center to EDGE of sq = tradius
-    radius_squared = radius**2
-    radius_root2_by2 = (2**0.5)*radius / 2 # length from center to CORNER of sq = tradius
-    [binned_radius,tmp] = map_to_mat_idx((tree[0]+radius,tree[1])
-      ,tree
-      ,bin_size)
-    [binned_radius_root2_by2,tmp] = map_to_mat_idx((tree[0]+radius_root2_by2,tree[1])
-      ,tree
-      ,bin_size)
+  # convert tree radius to nblocks
+  radius = tree[2] # length from center to EDGE of sq = tradius
+  radius_squared = radius**2
+  radius_root2_by2 = (2**0.5)*radius / 2 # length from center to CORNER of sq = tradius
+  [binned_radius,tmp] = map_to_mat_idx((tree[0]+radius,tree[1])
+    ,tree
+    ,bin_size)
+  [binned_radius_root2_by2,tmp] = map_to_mat_idx((tree[0]+radius_root2_by2,tree[1])
+    ,tree
+    ,bin_size)
 
-    # create a sub-mask of 1's centered on tree (+1 accounts for tree center)
-    l_outter_square = 2*binned_radius + 1
-    l_inner_square = 2*binned_radius_root2_by2 + 1
-    mask = np.ones((l_outter_square,l_outter_square),dtype=int)
-    # trim sub-mask to approximate a circular tree
-    for row in range(0,l_outter_square):
-      offset = l_inner_square - 1
-      inner_left_edge = binned_radius - binned_radius_root2_by2
-      inner_right_edge = binned_radius + binned_radius_root2_by2
-      # inspect all columns if row is not in the inner square, otherwise only
-      # inspect the columns that are in the outter square.
-      if (row <= inner_left_edge or inner_right_edge <= row):
-        offset = 0
-      # inspection: check that distance from center to block is < tree radius
-      for col in range(0, inner_left_edge):
-        if (radius_squared < ((row-binned_radius)*bin_size)**2 + ((col-binned_radius)*bin_size)**2):
-          mask[row][col] = 0
-      for col in range(inner_left_edge + offset,l_outter_square):
-        if (radius_squared < ((row-binned_radius)*bin_size)**2 + ((col-binned_radius)*bin_size)**2):
-          mask[row][col] = 0
+  # create a sub-mask of 1's centered on tree (+1 accounts for tree center)
+  l_outter_square = 2*binned_radius + 1
+  l_inner_square = 2*binned_radius_root2_by2 + 1
+  mask = np.ones((l_outter_square,l_outter_square),dtype=int)
+  # trim sub-mask to approximate a circular tree
+  for row in range(0,l_outter_square):
+    offset = l_inner_square - 1
+    inner_left_edge = binned_radius - binned_radius_root2_by2
+    inner_right_edge = binned_radius + binned_radius_root2_by2
+    # inspect all columns if row is not in the inner square, otherwise only
+    # inspect the columns that are in the outter square.
+    if (row <= inner_left_edge or inner_right_edge <= row):
+      offset = 0
+    # inspection: check that distance from center to block is < tree radius
+    for col in range(0, inner_left_edge):
+    if (radius_squared < ((row-binned_radius)*bin_size)**2 + ((col-binned_radius)*bin_size)**2):
+      mask[row][col] = 0
+    for col in range(inner_left_edge + offset,l_outter_square):
+    if (radius_squared < ((row-binned_radius)*bin_size)**2 + ((col-binned_radius)*bin_size)**2):
+      mask[row][col] = 0
 
-    # apply mask over tree center (within boundaries of mat)
-    xmin,xmax = binned_tree_loc[0] - binned_radius + int(n_bins/2), binned_tree_loc[0] + binned_radius + int(n_bins/2)
-    ymin,ymax = binned_tree_loc[1] - binned_radius + int(n_bins/2), binned_tree_loc[1] + binned_radius + int(n_bins/2)
-    mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
-    # mark tree center
-    icenter = int(n_bins/2)+binned_tree_loc[0];
-    jcenter = int(n_bins/2)+binned_tree_loc[1];
-    mat[icenter][jcenter] = -1
+  # apply mask over tree center (within boundaries of mat)
+  xmin,xmax = binned_tree_loc[0] - binned_radius + int(n_bins/2), binned_tree_loc[0] + binned_radius + int(n_bins/2)
+  ymin,ymax = binned_tree_loc[1] - binned_radius + int(n_bins/2), binned_tree_loc[1] + binned_radius + int(n_bins/2)
+  mat[xmin:xmax+1].T[ymin:ymax+1] = np.bitwise_or(mat[xmin:xmax+1].T[ymin:ymax+1],mask)
+  # mark tree center
+  icenter = int(n_bins/2)+binned_tree_loc[0];
+  jcenter = int(n_bins/2)+binned_tree_loc[1];
+  mat[icenter][jcenter] = -1
 
   return [mat,bin_size]
 
 """ DOC TESTS """
 if __name__ == "__main__":
-   import doctest
-   doctest.testmod()
+  import doctest
+  doctest.testmod()

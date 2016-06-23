@@ -33,9 +33,9 @@ def if_then_else(condition, out1, out2):
   """
   out1() if condition else out2()
   return
-#   --selectionMethods--
-#   randomPoint() -> [double,double]
-#   randomScale() -> int
+#  --selectionMethods--
+#  randomPoint() -> [double,double]
+#  randomScale() -> int
 random.seed(10)
 # Generates two random numbers in the point range; including endpoints.
 # ((int,int)) -> ([double,double])
@@ -55,38 +55,38 @@ values.
 # (!) come up with a good name
 class problem(object):
 # members:
-#   --input data--
-#   set of points ([[double,double]])
-#   --properties--
-#   iscovered ([bool])(indices correspond to points in set of points)
-#   total area (int)
-#   --output data--
-#   set of squares ([[double,double,int]])
+#  --input data--
+#  set of points ([[double,double]])
+#  --properties--
+#  iscovered ([bool])(indices correspond to points in set of points)
+#  total area (int)
+#  --output data--
+#  set of squares ([[double,double,int]])
   def __init__(self,sets,npoints,max_squares,point_range):
     """
     (int,int,int,[double,double]) -> None
     """
-    # init random input bound by point range
-    self.sets_of_points = numpy.array([[randomXY(point_range)
-      for j in range(npoints)]
-      for k in range(sets)],dtype=float)
-    # (!) debug
-    for i in range(sets):
-      print ("INPUT:")
-      print (sets_of_points[i])
-      if(i == sets-1): print ("init completed")
-    # init properties
-    self.iset = 0
-    self.total_area = 0
-    self.isCovered = numpy.zeros(npoints,dtype=bool)
-    self.max_squares = max_squares
-    # --(!) sets_of_squares[iset][-1] holds a count of squares in the set.
-    self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
+   # init random input bound by point range
+   self.sets_of_points = numpy.array([[randomXY(point_range)
+     for j in range(npoints)]
+     for k in range(sets)],dtype=float)
+   # (!) debug
+   for i in range(sets):
+     print ("INPUT:")
+     print (sets_of_points[i])
+     if(i == sets-1): print ("init completed")
+   # init properties
+   self.iset = 0
+   self.total_area = 0
+   self.isCovered = numpy.zeros(npoints,dtype=bool)
+   self.max_squares = max_squares
+   # --(!) sets_of_squares[iset][-1] holds a count of squares in the set.
+   self.sets_of_squares = numpy.array([[[0.,0.,0.]]*(max_squares+1)]*sets,dtype=float)
 
 
 # methods:
-#   --validationMethods--
-#   covers_point() -> bool
+#  --validationMethods--
+#  covers_point() -> bool
   def covers_new_point(square):
     """
     (int) -> bool
@@ -97,18 +97,18 @@ class problem(object):
       if (self.isCovered[i] == 1):
         continue
 
-      if (inbounds == [point - square[:2],square[:2]+[square[2]]*2 - point]):
-        return True
+    if (inbounds == [point - square[:2],square[:2]+[square[2]]*2 - point]):
+      return True
 
-    return False
+   return False
 
 
-#   --modificationMethods--
-#   insertSquare(pointSelectionMethod) -> None
-#   scaleSquare(squareSelectionMethod, scalar) -> None
-#   refresh() -> None
-#   next_set() -> None
-  def next_set(self):
+#  --modificationMethods--
+#  insertSquare(pointSelectionMethod) -> None
+#  scaleSquare(squareSelectionMethod, scalar) -> None
+#  refresh() -> None
+#  next_set() -> None
+   def next_set(self):
     """
     (None) -> None
     Advances to the next set by incrementing the self.iset and resetting
@@ -150,7 +150,7 @@ class problem(object):
     return
 
 # (!) consider passing the index for a square that can be scaled by scalar
-#     to cover a new point. i.e., throw out random/min square.
+#    to cover a new point. i.e., throw out random/min square.
   def scale_square(self,scalar):
     """
     (int) -> None
@@ -164,10 +164,10 @@ class problem(object):
     self.sets_of_squares[self.iset][index][2] *= scalar
     return
 
-  #   --selectionMethods--
-  #   minPoint() -> [double,double]
-  #   randomSquare() -> int
-  #   (!) minSquare() -> int
+  #  --selectionMethods--
+  #  minPoint() -> [double,double]
+  #  randomSquare() -> int
+  #  (!) minSquare() -> int
   def minPoint(self):
     """
     (None)-> [double,double]
@@ -175,6 +175,7 @@ class problem(object):
     the ith set of (x,y) points.
     """
     return [min(self.sets_of_points[self.iset][:,0]),min(self.sets_of_points[self.iset][:,1])]
+
   def randomSquareIndex(self):
     """
     (None) -> (int)
@@ -198,8 +199,9 @@ class problem(object):
         min_square = i
         min_area = s[2]
     return min_square
-  #   --outputGeneration--
-  #   buildSet() -> None
+
+  #  --outputGeneration--
+  #  buildSet() -> None
   def buildSetsOfSquares(self,build_routine):
     """
     (None) -> None
@@ -213,18 +215,18 @@ class problem(object):
     return
 
   # def shift_square(squares,index,dxdy):
-  #   """
-  #   ([[double,double,int]],int,[double,double]) -> [[double,double,int]]
-  #   Shift the square at the given index by dxdy and return the modified set
-  #   of squares. dxdy is the difference in x and y between the source point
-  #   and destination. In other words, if the source locaiton is [a,b] and the
-  #   destination is [c,d] then dxdy is [a-c,b-d].
-  #   """
-  #   # only apply shift to valid index
-  #   if (0 <= index and index < len(squares)):
-  #     squares[index][0] -= dxdy[0]
-  #     squares[index][1] -= dxdy[1]
-  #   return squares
+  #  """
+  #  ([[double,double,int]],int,[double,double]) -> [[double,double,int]]
+  #  Shift the square at the given index by dxdy and return the modified set
+  #  of squares. dxdy is the difference in x and y between the source point
+  #  and destination. In other words, if the source locaiton is [a,b] and the
+  #  destination is [c,d] then dxdy is [a-c,b-d].
+  #  """
+  #  # only apply shift to valid index
+  #  if (0 <= index and index < len(squares)):
+  #    squares[index][0] -= dxdy[0]
+  #    squares[index][1] -= dxdy[1]
+  #  return squares
 
 """
 Initialize problem
@@ -279,9 +281,9 @@ def evaluateMinArea(individual):
   Execute the code to modify class problem. Analyse the class to produce a score
   that reflects how successfully the set of squares covers the set of points.
   for each set:
-    nPoints = count number of True in isCovered
-    totalArea = sum of areas in set of squares
-    accumScore = nPoints/totalArea
+   nPoints = count number of True in isCovered
+   totalArea = sum of areas in set of squares
+   accumScore = nPoints/totalArea
   score = accumScore/nSets
   """
 
