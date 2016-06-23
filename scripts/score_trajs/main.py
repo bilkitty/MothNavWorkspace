@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from fileio import load_data
+from fileio import load_dataframe
 from score import score_trial
 from plotStuff import plot_scores, plot_mat
 import glob
