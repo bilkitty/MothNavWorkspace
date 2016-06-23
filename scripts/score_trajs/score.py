@@ -60,23 +60,48 @@ def gaussian2d(N,meanxy,sigmaxy,amp):
   # compute dot product of x and y
   return amp*np.dot(gaussianx,gaussiany)
 
-# instead of kernel_params, pass kernel function (e.g., 2d gaussian function)
 def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   """
-  ([int,f4,f4]
-    ,numpy.ndarray(tuple(f4,f4))
-    ,numpy.ndarray(tuple(f4,f4))
-    ,numpy.ndarray(f4)
-    ,bool)
-  -> ndarray(ndarray)
+  Compute an NxN Gaussian kernel.
 
-  Given [N,headingx,headingy] and M sets of gaussian parameters (mean,
-  stdev,amplitude), compute an NxN Gaussian kernel. If the lengths of gaussian
-  parameters don't match or the lenght of ksize_and_hxhy is not 3, then None is
-  returned. Otherwise, return an unrotated kernel by default and a rotate kernel
-  if rotate is True.
+  If the lengths of Gaussian parameters don't match or the length of
+  `ksize_and_hxhy` is not 3, then None is returned. If rotate is true,
+  then the kernel is rotated by headingx and headingy contained in
+  `ksize_and_hxhy`. Also, kernel size, N, is defined by `ksize_and_hxhy[0]`.
 
-  Examples:
+  (!) NOTE: rotation is currently done AFTER the kernel is discretized.
+
+  Parameters
+  ----------
+  ksize_and_hxhy : array_like
+    An array that defines the kernel size, x heading vector, and y
+    heading vector, respectively.
+  means : array_like
+    An array of tuples that specify xmean and ymean respectively. This
+    array must be length T where T is the common length between all
+    Gaussian parameters (i.e., mean, sigma, amplitude).
+  sigmas : array_like
+    An array of tuples that specify standard deviation for x and y
+    respectively. This array must be length T where T is the common
+    length between all Gaussian parameters (i.e., mean, sigma,
+    amplitude).
+  amplitudes : array_like
+    An array of doubles that specify amplitude to be used for each
+    Gaussian term in the kernel. This array must be length T where T
+    is the common length between all Gaussian parameters (i.e., mean,
+    sigma, amplitude).
+  rotate : bool, optional
+    Determines whether the kernel output is rotated. By default, this
+    is False.
+
+  Returns
+  -------
+  kernel : array_like
+    An NxN matrix that is a discretization of one or more 2-D Gaussian
+    terms in a scoring function.
+
+  Examples
+  --------
   >>> sizehxhy = [5,0,0]
   >>> mean = [(0,0)]
   >>> sig = [(10,10)]
@@ -100,6 +125,9 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
     return None
 
   M = len(means)
+  if (M <= 0):
+    print("""(!) score.generateKernel: Invalid length {:d} for Gaussian
+      parameters.""".format(M))
   if (len(sigmas) != M or len(amplitudes) != M):
     print("""(!) score.generateKernel: Lengths of Gaussian parameter arrays
       don't match; len of means,sigs,amps = {:d},{:d},{:d}""".format(len(means)
@@ -159,28 +187,13 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   display : bool, optional
     Plot scores when `display` is true.
 
-Returns
--------
-scores : array_like
-  A list of score values for each frame in the trial.
+  Returns
+  -------
+  scores : array_like
+    A list of score values for each frame in the trial.
 
-  Explanation of return value named `describe`.
-out : type
-  Explanation of `out`.
-Other Parameters
-----------------
-only_seldom_used_keywords : type
-    Explanation
-common_parameters_listed_above : type
-    Explanation
-Raises
-------
-BadException
-    Because you shouldn't have done that.
-See Also
---------
-
-  Examples:
+  Examples
+  -------
   >>> mean = [(0,0)]
   >>> sig = [(10,10)]
   >>> amp = [1]
