@@ -41,12 +41,40 @@ def score_frame(mask,kernel):
 oneDGaussian = lambda vbar,v,vsig: np.exp(-1*(vbar-v)**2 / (2*vsig**2))
 def gaussian2d(N,meanxy,sigmaxy,amp):
   """
-  (int,tuple(f4,f4),tuple(f4,f4),f4) -> numpy.ndarray
+  Computes a single term NxN Gaussian matrix.
 
-  Returns an NxN Gaussian matrix with amplitude, mean, and standard dev
-  described by meanxy,sigmaxy,amp.
+  A Gaussian function is computed using tuples `meanxy` and `sigmaxy` which
+  specify the center and spread of the Gaussian function, respectively. The
+  amplitude is specified by `amp`.
+
+  Parameters
+  ----------
+  N : int
+    Size of Gaussian matrix to return.
+  meanxy : tuple
+    X and y center. (float)
+  sigmaxy : tuple
+    X and y standard deviation. (float)
+  amp : float
+    Amplitude of Gaussian matrix.
+
+  Returns
+  -------
+  gaussian2d : array_like
+
+  Examples
+  --------
+  >>> N = 5
+  >>> mean = (0,0)
+  >>> sigma = (1,1)
+  >>> amplitude = 2
+  >>> g2 = gaussian2d(N,mean,sigma,amplitude)
+  >>> import pylab, numpy, sys
+  >>> sys.stdout = pylab.pcolor(numpy.linspace((-N//2),N//2,N)
+  ... ,numpy.linspace((-N//2),N//2,N)
+  ... ,g2)
+  >>> pylab.show()
   """
-
   xbar,ybar = meanxy[0],meanxy[1]
   xsig,ysig = sigmaxy[0],sigmaxy[1]
 
@@ -62,7 +90,7 @@ def gaussian2d(N,meanxy,sigmaxy,amp):
 
 def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
   """
-  Compute an NxN Gaussian kernel.
+  Compute an NxN Gaussian kernel with multiple terms.
 
   If the lengths of Gaussian parameters don't match or the length of
   `ksize_and_hxhy` is not 3, then None is returned. If rotate is true,
@@ -86,7 +114,7 @@ def generateKernel(ksize_and_hxhy,means,sigmas,amplitudes,rotate=False):
     length between all Gaussian parameters (i.e., mean, sigma,
     amplitude).
   amplitudes : array_like
-    An array of doubles that specify amplitude to be used for each
+    An array of floats that specify amplitude to be used for each
     Gaussian term in the kernel. This array must be length T where T
     is the common length between all Gaussian parameters (i.e., mean,
     sigma, amplitude).
