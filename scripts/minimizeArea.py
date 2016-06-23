@@ -287,6 +287,10 @@ def evaluateMinArea(individual):
 
   func = toolbox.compile(expr=individual)
 
+  # for i sets
+  # run routine
+  # refresh problem
+
   return
 
 toolbox.register("evaluate", evaluateMinArea)
