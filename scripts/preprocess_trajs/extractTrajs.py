@@ -1,10 +1,44 @@
 #!/usr/bin/python3
 
-# returns dictionary of trajectories by start and end indices
-# key = 'f'+n, value = [range1,range2]
-def get_trajs(data,cond):
-   print(cond)
-   obst,speed,fmin,fmax,mid = cond[0],cond[1],cond[2],cond[3],cond[4]
+def get_trajs(data,conditions):
+  """
+  Retrieves a set of single trajectories as sclices from a Pandas DataFrame.
+
+  The DataFrame, `data`, is sliced according to the obstacle type, mothid,
+  flight_speed, fog_min, and fog_max specified in `conditions`.
+
+  Parameters
+  ----------
+  data : Pandas.DataFrame
+    A collection of multiple trajectories with at least the columns ['obstacle',
+    'moth_id','flight_speed','fog_min','fog_max'].
+  conditions : array_like
+    A list of strings that identify:
+    - obstacle (str)
+    - moth_id (str)
+    - flight_speed (float)
+    - fog_min (float)
+    - fog_max (float)
+    These values should match the ones used for the set of trials returned.
+
+  Returns
+  -------
+  trial_dictionary : dict
+     A dictionary of trial_id keys and DataFrame index ranges for the corresponding
+     trial.
+     e.g., td = {'f0':[data.index[m],data.index[n]], ... }
+     where m and n are the starting and ending indices of flight/trial zero with
+     respect to the index of `data`.
+
+  Notes
+  -----
+  To obtain a single trial, simply index it from `data` using the start and end
+  indices in trial_dictionary['fN'], where N is the desired trial number.
+  e.g., trial = data[trial_dictionary['f0'][0]:trial_dictionary['f0'][1]]
+
+  """
+   print(conditions)
+   obst,speed,fmin,fmax,mid = conditions[0],conditions[1],conditions[2],conditions[3],conditions[4]
    if('obstacles' in data.columns):
       obs_slice = data[sel_obstacle(data,obst)]
    else:
@@ -20,37 +54,35 @@ def get_trajs(data,cond):
       return moth_slice
 
    # extract no. trials
-   dd = {}
-   iit = 0
+   dictionary = {}
+   trial_count = 0
    flight = 'f'
    iprev = moth_slice.index[0]
    start_new = False
-   dd[flight+str(iit)] = [iprev,0]
+   # fill in the first trial's starting index
+   dictionary[flight+str(trial_count)] = [iprev,0]
 
-   # save icurr as start of next trial and
-   # 1 after iprev as end of last trial
-   for ii in moth_slice.index[1:]:
-      if (ii - iprev) > 1:
-         dd[flight+str(iit)][1] = iprev+1
-         print("flight"+str(iit)+" : "+str(ii)+" - "+str(iprev))
-         iit += 1
-         dd[flight+str(iit)] = [ii,0]
-      iprev = ii
+   for icurr in moth_slice.index[1:]:
+      if (icurr - iprev) > 1:
+         # mark the end of the current trial at iprev+1
+         dictionary[flight+str(trial_count)][1] = iprev+1
+         print("flight"+str(trial_count)+" : "+str(icurr)+" - "+str(iprev))
+
+         # mark the start of the next trial at icurr
+         trial_count += 1
+         dictionary[flight+str(trial_count)] = [icurr,0]
+      iprev = icurr
 
    # don't forget last index
-   dd[flight+str(iit)][1] = moth_slice.index[-1]+1
+   dictionary[flight+str(trial_count)][1] = moth_slice.index[-1]+1
 
    # verify extraction by checking length
    tlen=0
-   for el in dd.values():
+   for el in dictionary.values():
        tlen += len(data[el[0]:el[1]])
+   assert tlen != len(moth_slice), "Total trial length doens't match length of moth slice."
 
-   if(tlen != len(moth_slice)):
-      # print("tlen: "+str(tlen))
-      # print("ms: "+str(len(moth_slice)))
-      print("(!) ERROR: Problem getting single trajs")
-
-   return dd
+   return dictionary
 
 def sel_moth(block,name):
    return block.moth_id == name
