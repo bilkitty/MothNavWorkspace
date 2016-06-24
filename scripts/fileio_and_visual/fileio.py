@@ -77,7 +77,7 @@ def save_dataframe(data_frame,file_format,file_path):
     else:
       print("(!) Saving {:s} with key={:s}".format(file_path,key))
     try:
-      data_frame.to_hdf(file_path,key=key)
+      data_frame.to_hdf(file_path,key=key,format='table',mode='w')
     except OSError:
       print("(!) You passed a directory path instead of a file path.")
   else:
