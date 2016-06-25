@@ -1,59 +1,12 @@
-.
-├── conditions
-├── configure_python_environment.bash
-├── Dave read-in and score testing.ipynb
-├── fileio_and_visual
-│   ├── fileio.py
-│   └── plotStuff.py
-├── minimizeArea.py
-├── preprocess_trajs
-│   ├── discretize.py
-│   ├── extractTrajs.py
-│   ├── generate_trial_masks.py
-│   └── saveSingleTrials.py
-├── randomForests.py
-├── README
-├── score_trajs
-│   ├── main.py
-│   └── score.py
-└── test
-    ├── 4_4_8.pickle
-    ├── discretize.png
-    ├── forest_patch_only.png
-    ├── mat.png
-    ├── insect1_448f0.h5
-    ├── scores.png
-    ├── test.csv
-    ├── test.h5
-    ├── traj.png
-    ├── trees.csv
-    ├── trees.png
-    └── tree_with_forest_patch.png
+This package loads precomputed trial masks that describe the environment about the moth frame by frame. A scoring function is applied to this set of masks to yield a score value that allows multiple sets of masks to be contrasted.
 
-Scripts
+The main module can open either csv or hdf files. Since the traj and env data are loaded as Pandas DataFrames, the x,y columns in traj are expected to be called "pos_x" and "pos_y". For env data, the columns should be labeled ['x','y','r'].
 
-This package provides mechanisms for loading, visualising, and transforming the data collected from Yonatan's insect flight arena.
+processing frames into scores:
+  main.py
 
-In addition, an example, minimizeArea.py, investigates using DEAP framework to implement Genetic Programming as an optimization technique.
+dependencies:
+  score.py
+  plotStuff.py
 
-Overview :
-Our goal in analysing this data is to derive a mathematical description of the decision making policy used by insects. Rather than a first-person point of view, we conduct our analysis from an aerial perspective -- much like mapping in robotic navigation. Via this perspective, we can discretize the virtual world from the insect's point of view (i.e., a neighborhood of obstacles centered on the insect) and apply a discretized scoring function to each time point in a trajectory. Ideally, the shape of the scoring function should capture what the insect is visually paying attention to in its environment. For example, if the insect uses proximity in a strategy to fly close, but not too close, to obstacles then the scoring function might look like a bagel half centered on the insect. To find an optimal scoring function we use a combination of parameterized functions that are independently evolved using Genetic Programming. In addition, we create a set of counter-factual forests (i.e., a random redistribution of trees from the original forest) and generate a set of arificial trial masks. Potential solutions are contrasted by how well they differentiate the scores from real and artificial trials. As a conclusion to our analysis, we hope to model the policy directs the insects' decisions as they navigate crowded environments.
-
-Genetic Programming :
-minimizeArea.py - Experimentation with GP using DEAP (https://github.com/deap/deap) on a toy problem.
-
-Counter-factual Forests:
-randomForests.py - Generates a set of artificial forests with similar statistical properties as a real forest. These forests are saved in ../data/forests using the datetime of their creation as a file name.
-
-/fileio_and_visual : Scripts that load, save, and plot various forms of trial and forest data.
-
-/preprocess_trajs : Scripts that extract single trials from bulk trial data and process them into sets of discretized frames, or masks.
-
-/score_trajs : Scripts that generate scores for each time point in a trajectory. The scoring function that essentially describes what the insect is visually paying attention to is a normalized summation of 2-D Gaussian kernels. Later, we evolve this function using Genetic Programming to find the optimal function that captures the visual cues used by the insects in the trials.
-
-/test : Contains images, csv, hdf, and pickle files that exemplify inputs and outputs for these scripts.
-  *.png - these are plots of masks, forests/trees, trajectories, or a combination of trees and trajectories.
-  *.h5 - these are hdf files that contain trajectory data. Forests can be saved as hdf format as well.
-  *.csv - these are csv files that contain forest data. Trajectories can be saved as csv files, but hdf format is preferred.
-  *.pickle - these contain trials that have been processed into discretized frames (i.e.,masks). The trials are stored in a dictionary where a key is trial_id (i.e., datetime) with value of a list of tuples. Each tuple contains a mask, x, y, heading x, and heading y of a time point in the trajectory.
 
