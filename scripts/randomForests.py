@@ -44,8 +44,8 @@ def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_P
     # label = datetime_from_timestamp.split('.')[0]
     label = non_digit_chars.sub('_',str(datetime_from_timestamp))
     # save tree data as cvs with timestamp/datetime label
-    save_dataframe(new_forest,'csv',dst_filepath+"forest_"+label)
-    print("saved @ "+dst_filepath+"forest_"+label)
+    save_dataframe(new_forest,'csv',dst_filepath+"forest_"+label+".csv")
+    print("saved @ "+dst_filepath+"forest_"+label+".csv")
   return
 
 

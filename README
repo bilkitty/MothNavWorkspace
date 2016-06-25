@@ -27,7 +27,7 @@ DIRECTORY MAP
 
 /data : a collection of raw and processed trial data, forest data, transformed trial data (i.e., masks).
 
-  /forests : HDF files containing dataframes with columns ['x','y','r']
+  /forests : csv files containing dataframes with columns ['x','y','r']. Artificial forests are marked by a datetime postfix in their file name.
 
   /masks : Discretized frames generated from real (i.e., original_set) and fake (i.e., random_set) forests. Within these directories, frames are organized by mothid. The frames themselves are stored in a pickle file as a dictionary of trial ids and sets of masks.
 
