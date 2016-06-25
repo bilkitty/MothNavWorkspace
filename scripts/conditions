@@ -1,4 +1,4 @@
-obstacle : bright
-speed:4.0
+obstacle: bright
+flight_speed: 4.0
 fog_min: 4.0
 fog_max: 8.0

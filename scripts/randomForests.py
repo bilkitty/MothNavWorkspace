@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from loadYoyoData import load_data,save_data
+from fileio import load_dataframe, save_dataframe
 from plotStuff import plot_trees
 import numpy as np
 import math
 
 
-FOREST_PATH = "/home/bilkit/Dropbox/moth_nav_analysis/data/forests/"
+FOREST_PATH = "../data/forests/"
 
 def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_PATH):
   """
@@ -18,7 +18,7 @@ def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_P
   """
 
   # load tree data
-  seed_forest = load_data('csv',src_filepath)
+  seed_forest = load_dataframe('csv',src_filepath)
   # compute distance between forest center and tree centers
   seed_radii = (seed_forest['x']**2 + seed_forest['y']**2)**0.5
 
@@ -44,8 +44,8 @@ def createNForests(N,src_filepath=FOREST_PATH+"forest.csv",dst_filepath=FOREST_P
     # label = datetime_from_timestamp.split('.')[0]
     label = non_digit_chars.sub('_',str(datetime_from_timestamp))
     # save tree data as cvs with timestamp/datetime label
-    save_data(new_forest,'csv',dst_filepath+"forest_"+label)
-    print("saved @ "+dst_filepath+"forest_"+label)
+    save_dataframe(new_forest,'csv',dst_filepath+"forest_"+label+".csv")
+    print("saved @ "+dst_filepath+"forest_"+label+".csv")
   return
 
 
@@ -91,7 +91,6 @@ def computeNormalStats(arr):
 
   return mean,sig
 
-createNForests(5)
 
 
 
