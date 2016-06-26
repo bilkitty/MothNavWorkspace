@@ -3,7 +3,6 @@
 from plotStuff import plot_mat
 import numpy as np
 import scipy.ndimage as ndimage
-import time
 import math
 import pylab
 import sys
@@ -256,8 +255,6 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   max_score: 115.365077304
   >>> handle.close()
   """
-  # measure processing times [score,genkernel]
-  procTime = [0.]*2
 
   print("-----------------")
   print("Scoring: t{:d}".format(tcnt))
@@ -284,8 +281,6 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
   scores = [0]*len(trial_masks)
   imask = 0 # mask count
   # initialize kernel
-  start = time.time()
-
   ksize_and_hxhy = [trial_masks[0].shape[0],headingxs[0],headingys[0]]
   kernel = generateKernel(ksize_and_hxhy
     ,kernel_params[0]
@@ -293,13 +288,10 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
     ,kernel_params[2]
     ,rotate=True)
 
-  procTime[1] += time.time() - start
   # score each mask in trial masks
   for sparse_mask in trial_masks:
     mask = sparse_mask.toarray()
     if (kernel_params == 'rotated'):
-      start = time.time()
-
       # refresh kernel
       ksize_and_hxhy = [trial_masks[imask].shape[0]
         ,headingxs[imask]
@@ -310,8 +302,6 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
         ,kernel_params[2]
         ,rotate=True)
 
-      procTime[1] += time.time() - start
-
   # visualize loaded masks
   if (display and imask < 100):
     plot_mat(mask,bsize,"./masks/"+desc[0]
@@ -321,25 +311,15 @@ def score_trial(trial_data,tcnt,desc,kernel_params,display=False):
       +'-t'+str(tcnt)
       +'-'+str(imask)+".png")
 
-  start = time.time()
-
   # get score
   scores[imask] = score_frame(mask,kernel)
   imask += 1
-
-  procTime[0] += time.time() - start
-
 
   print("===== SCORE =====")
   print("masks processed: "+str(imask))
   print("cummulative_score: "+str(sum(scores[0:imask])))
   print("min_score: "+str(min(scores[0:imask])))
   print("max_score: "+str(max(scores[0:imask])))
-  # print("==== CPU TIME (ms) ====")
-  # print("generating kernel: "+str(round(1000*procTime[1],5)))
-  # print("processing masks: "+str(round(1000*procTime[0],5)))
-  # print("avg per mask: "+str(round(1000*procTime[0]/imask,5)))
-  # print("cummulative kernel and mask: "+str(round(1000*sum(procTime),5)))
 
   return scores[0:imask]
 
